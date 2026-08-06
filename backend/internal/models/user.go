@@ -1,0 +1,54 @@
+package models
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type User struct {
+	ID       uuid.UUID  `json:"id"`
+	IRID     string     `json:"ir_id"`
+	Name     string     `json:"name"`
+	Email    string     `json:"email"`
+	Phone    string     `json:"phone"`
+	Role     string     `json:"role"`
+	UplineID *uuid.UUID `json:"upline_id"`
+	Status   string     `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type CreateUserRequest struct {
+	IRID     string     `json:"ir_id" binding:"required,min=1,max=50"`
+	Name     string     `json:"name" binding:"required"`
+	Email    string     `json:"email" binding:"required,email"`
+	Phone    string     `json:"phone" binding:"required,min=7"`
+	Role     string     `json:"role" binding:"required"`
+	UplineID *uuid.UUID `json:"upline_id"`
+	Status   string     `json:"status"`
+}
+
+type UpdateUserRequest struct {
+	Name     string     `json:"name"`
+	Email    string     `json:"email"`
+	Phone    string     `json:"phone"`
+	Role     string     `json:"role"`
+	UplineID *uuid.UUID `json:"upline_id"`
+	Status   string     `json:"status"`
+}
+
+type ListUsersQuery struct {
+	Page   int    `form:"page" binding:"min=1"`
+	Limit  int    `form:"limit" binding:"min=1,max=100"`
+	Search string `form:"search"`
+	IRID   string `form:"ir_id"`
+	Status string `form:"status"`
+}
+
+type ListUsersResponse struct {
+	Data  []User `json:"data"`
+	Total int64  `json:"total"`
+	Page  int    `json:"page"`
+	Limit int    `json:"limit"`
+}
