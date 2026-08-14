@@ -9,9 +9,10 @@ frontend/dist/
 
 # Backend
 backend/.env
+backend/.local.env
 
 # OS
 .DS_Store
 
 # Local config files
-*.local.envbackend/.env
+*.local.env

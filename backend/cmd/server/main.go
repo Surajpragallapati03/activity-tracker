@@ -6,6 +6,7 @@ import (
 
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/config"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/database"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/routes"
 	"github.com/gin-gonic/gin"
 )
@@ -43,6 +44,7 @@ func main() {
 	log.Println("Starting HTTP server on :8080")
 	router := gin.Default()
 	_ = router.SetTrustedProxies(nil)
+	router.Use(middleware.CORS())
 	routes.Setup(router, db, cfg)
 
 	if err := router.Run(":" + cfg.Port); err != nil {

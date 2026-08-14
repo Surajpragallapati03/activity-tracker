@@ -24,10 +24,6 @@ func NewUserHandler(service *services.UserService, authz *services.Authorization
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	currentUser := GetCurrentUser(c)
-	if currentUser.Role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 
 	var req models.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -35,10 +31,23 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.CreateUser(c.Request.Context(), &req)
+	// Admin can create users and optionally specify upline
+	// Non-admin users can create users and must set upline to themselves
+	if currentUser.Role == "admin" {
+		// Admin can optionally specify upline_id, defaults to no upline
+	} else {
+		// Non-admin can only create users under themselves
+		req.UplineID = &currentUser.ID
+	}
+
+	user, err := h.service.CreateUserWithPromotion(c.Request.Context(), currentUser, &req)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			c.JSON(http.StatusConflict, gin.H{"error": "User with this email, phone, or ir_id already exists"})
+			return
+		}
+		if strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -105,6 +114,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Non-admin users cannot change upline_id of their downlines
+	if currentUser.Role != "admin" && req.UplineID != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non-admin users cannot change upline"})
+		return
+	}
+
 	user, err := h.service.UpdateUser(c.Request.Context(), id, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "user not found") {
@@ -141,8 +156,16 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	}
 
 	currentUser := GetCurrentUser(c)
-	if !h.authz.CanAccessUser(c.Request.Context(), currentUser, targetUser) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+
+	// Only admin can delete users
+	if currentUser.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admin can delete users"})
+		return
+	}
+
+	// Users cannot delete themselves
+	if currentUser.ID == targetUser.ID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Users cannot delete themselves"})
 		return
 	}
 

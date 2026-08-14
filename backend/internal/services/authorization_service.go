@@ -70,6 +70,21 @@ func (s *AuthorizationService) CanAccessUser(ctx context.Context, user *models.U
 	return s.isInUplineChain(ctx, targetUser, user.ID)
 }
 
+// CanCreateUserUnder checks if user can create a user under a specified upline.
+// Admin can create under any upline. Non-admin can only create under themselves.
+func (s *AuthorizationService) CanCreateUserUnder(ctx context.Context, user *models.User, uplineID *uuid.UUID) bool {
+	if user.Role == "admin" {
+		return true
+	}
+
+	// Non-admin can only create under themselves
+	if uplineID == nil {
+		return false // Must specify an upline for non-admin
+	}
+
+	return *uplineID == user.ID
+}
+
 // GetAccessibleIRIDs returns all IR IDs that the user can access.
 // For admin, returns nil (meaning all IRs). For others, returns own and downline IRs.
 func (s *AuthorizationService) GetAccessibleIRIDs(ctx context.Context, user *models.User) ([]string, error) {

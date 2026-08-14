@@ -181,6 +181,45 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func (r *UserRepository) DeleteWithReparenting(ctx context.Context, id uuid.UUID) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Get the user to find their upline_id
+	getQuery := `SELECT upline_id FROM users WHERE id = $1`
+	var uplineID *uuid.UUID
+	err = tx.QueryRow(ctx, getQuery, id).Scan(&uplineID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return pgx.ErrNoRows
+		}
+		return err
+	}
+
+	// Update all direct children to have the deleted user's upline as their upline
+	updateQuery := `UPDATE users SET upline_id = $1, updated_at = now() WHERE upline_id = $2`
+	_, err = tx.Exec(ctx, updateQuery, uplineID, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete the user
+	deleteQuery := `DELETE FROM users WHERE id = $1`
+	cmdTag, err := tx.Exec(ctx, deleteQuery, id)
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (r *UserRepository) List(ctx context.Context, query *models.ListUsersQuery) ([]models.User, int64, error) {
 	whereClause := ""
 	args := []interface{}{}

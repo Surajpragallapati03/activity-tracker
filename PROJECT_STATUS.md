@@ -1,6 +1,6 @@
 # Activity Tracker - Project Status
 
-Last Updated: 2026-08-12
+Last Updated: 2026-08-14
 
 ---
 
@@ -45,6 +45,7 @@ PostgreSQL
 - [x] postgres.go
 - [x] routes.go
 - [x] Health endpoint
+- [x] CORS middleware
 
 ---
 
@@ -64,7 +65,7 @@ PostgreSQL
 
 # Business Modules
 
-## Users ✅
+## Users Backend ✅
 
 - [x] Create
 - [x] Get
@@ -79,10 +80,22 @@ PostgreSQL
 - [x] Role validation
 - [x] Status validation
 - [x] Default admin seeding
+- [x] Upline hierarchy
+- [x] Direct downline handling
+- [x] Indirect downline handling
+- [x] Hierarchy-based authorization
+- [x] Everyone can create users
+- [x] IR can create users
+- [x] IR promotion to upline
+- [x] Only admin can delete users
+- [x] Self-delete prevention
+- [x] Hierarchy-safe deletion
+- [x] Downline re-parenting on deletion
+- [x] Atomic delete + re-parenting
 
 ---
 
-## Infos ✅
+## Infos Backend ✅
 
 - [x] Create
 - [x] Get
@@ -92,12 +105,14 @@ PostgreSQL
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
+- [x] Authorization
+- [x] Activity ownership through ir_id
 - [x] Response validation: A, AB, B, BC, C
 - [x] Status as free text
 
 ---
 
-## Invites ✅
+## Invites Backend ✅
 
 Rules:
 
@@ -119,10 +134,11 @@ Features:
 - [x] Pagination
 - [x] Partial updates
 - [x] Date/time validation
+- [x] Authorization
 
 ---
 
-## Plans ✅
+## Plans Backend ✅
 
 Rules:
 
@@ -144,10 +160,11 @@ Features:
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
+- [x] Authorization
 
 ---
 
-## Closings ✅
+## Closings Backend ✅
 
 Rules:
 
@@ -167,10 +184,11 @@ Features:
 - [x] Pagination
 - [x] Partial updates
 - [x] Date validation
+- [x] Authorization
 
 ---
 
-## FG Invites ✅
+## FG Invites Backend ✅
 
 Rules:
 
@@ -192,10 +210,11 @@ Features:
 - [x] Pagination
 - [x] Partial updates
 - [x] Date/time validation
+- [x] Authorization
 
 ---
 
-## Feel Good / KIV ✅
+## Feel Good / KIV Backend ✅
 
 Rules:
 
@@ -217,6 +236,7 @@ Features:
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
+- [x] Authorization
 
 ---
 
@@ -254,6 +274,8 @@ Feel Good / KIV
 - [x] Unknown-user rejection
 - [x] OAuth state validation
 - [x] Browser OAuth flow
+- [x] Backend → frontend OAuth redirect
+- [x] End-to-end browser login
 
 ## JWT
 
@@ -284,28 +306,38 @@ Feel Good / KIV
 
 ## Admin
 
-- [x] Full access to users
-- [x] Full access to activities
-- [x] Create activities for any user
-- [x] Edit any user's activities
-- [x] Delete any user's activities
+- [x] Full access to all users
+- [x] Full access to all activities
+- [x] Create users
+- [x] Create activities for any IR
+- [x] Edit any user
+- [x] Edit any activity
+- [x] Delete any user
+- [x] Delete any activity
+- [x] Choose upline when creating users
 
 ## Upline
 
-- [x] Access own activities
-- [x] Access direct downline activities
-- [x] Access indirect downline activities
-- [x] Create downline activities
-- [x] Edit downline activities
-- [x] Delete downline activities
+- [x] View self
+- [x] View direct downlines
+- [x] View indirect downlines
+- [x] Edit self
+- [x] Edit downlines
+- [x] Create users
+- [x] Create users under self
+- [x] Manage permitted activities
 
-## IR / Independent Distributor
+## IR
 
-- [x] Access own activities
-- [x] Create own activities
-- [x] Edit own activities
-- [x] Delete own activities
-- [x] Access descendant activities
+- [x] View self
+- [x] View direct downlines
+- [x] View indirect downlines
+- [x] Edit self
+- [x] Edit downlines
+- [x] Create users
+- [x] Create users under self
+- [x] IR can be promoted to upline
+- [x] Manage permitted activities
 
 ## Hierarchy
 
@@ -313,10 +345,13 @@ Feel Good / KIV
 - [x] Direct downline lookup
 - [x] Indirect downline lookup
 - [x] Recursive hierarchy traversal
+- [x] Hierarchy-based user access
 - [x] Hierarchy-based activity access
+- [x] Hierarchy-based user creation
 - [x] Hierarchy-based activity creation
-- [x] Hierarchy-based activity editing
-- [x] Hierarchy-based activity deletion
+- [x] Hierarchy-based editing
+- [x] Hierarchy-safe deletion
+- [x] Downline re-parenting
 - [x] IR can have downlines
 - [x] IR can be promoted to Upline
 
@@ -324,36 +359,36 @@ Feel Good / KIV
 
 - [x] ir_id represents activity owner
 - [x] Logged-in user does not replace ir_id
-- [x] Admin can create for another IR
-- [x] Upline can manage downline activities
-- [x] IR can manage own activities
+- [x] Admin can create activity for another IR
+- [x] Upline can manage permitted downline activities
+- [x] IR can manage permitted activities
 - [x] No created_by / updated_by fields
 
 ---
 
-# Frontend Authentication 🚧
-
-## Authentication
+# Frontend Authentication ✅
 
 - [x] Auth TypeScript models
 - [x] AuthContext
 - [x] useAuth hook
-- [x] Google login button
+- [x] Google login
 - [x] OAuth callback handling
 - [x] Access token handling
 - [x] Refresh token handling
-- [x] Axios Bearer token interceptor
+- [x] Axios Bearer interceptor
 - [x] Automatic token refresh
 - [x] Request queue during token refresh
 - [x] Logout
 - [x] Auth state persistence
 - [x] Protected routes
 - [x] Login page
-- [x] Basic authenticated dashboard
-- [ ] Backend OAuth callback → frontend redirect
-- [ ] End-to-end browser authentication test
+- [x] Dashboard
+- [x] Backend OAuth callback → frontend redirect
+- [x] End-to-end browser authentication
 
-## Frontend Foundation
+---
+
+# Frontend Foundation ✅
 
 - [x] React Router
 - [x] API client
@@ -361,34 +396,153 @@ Feel Good / KIV
 - [x] JWT token handling
 - [x] Token refresh handling
 - [x] Protected routes
-- [ ] Responsive application layout
-- [ ] Sidebar
-- [ ] Header
+- [x] Responsive application layout
+- [x] Responsive sidebar
+- [x] Responsive header
+- [x] Theme/color system
+- [x] Typography system
+- [x] Reusable UI components
+- [x] Consistent spacing/layout system
+- [x] Mobile navigation
+- [x] Responsive Login page
+- [x] Responsive Dashboard
+- [x] Accessibility/focus states
+
+---
+
+# Frontend Dashboard + Users ✅
+
+## Dashboard
+
+- [x] Real authenticated user information
+- [x] User statistics
+- [x] Account information
+- [x] Edit Profile
+- [x] Edit own name
+- [x] Edit own email
+- [x] Edit own phone
+- [x] Edit own status
+- [x] Responsive dashboard
+
+## Users
+
+- [x] Users list
+- [x] Search by name
+- [x] Search by email
+- [x] Search by IR ID
+- [x] Backend pagination
+- [x] Frontend pagination
+- [x] 20 users per page
+- [x] View user
+- [x] Create user
+- [x] Edit user
+- [x] Delete user
+- [x] Upline selection
+- [x] Role selection
+- [x] Loading states
+- [x] Error states
+- [x] Empty states
+- [x] Confirmation before delete
+- [x] Hierarchy-aware permissions
+- [x] Admin full access
+- [x] Upline hierarchy access
+- [x] IR hierarchy access
+- [x] Self-delete prevention
+- [x] Downline re-parenting
 
 ---
 
 # Frontend Authorization
 
-- [ ] Admin UI permissions
-- [ ] Upline UI permissions
-- [ ] IR UI permissions
-- [ ] Hide unauthorized actions
-- [ ] Activity ownership handling
-- [ ] Protected navigation
+- [x] Admin UI permissions
+- [x] Upline UI permissions
+- [x] IR UI permissions
+- [x] Hide unauthorized actions
+- [x] Activity ownership handling
+- [x] Protected navigation
+- [x] Hierarchy-aware user actions
 
 ---
 
-# Frontend Pages
+# Frontend Business Modules
 
-- [x] Login
-- [x] Basic Dashboard
-- [ ] Users
-- [ ] Infos
-- [ ] Invites
-- [ ] Plans
-- [ ] Closings
-- [ ] FG Invites
-- [ ] Feel Goods
+## Infos
+
+- [ ] List Infos
+- [ ] Search Infos
+- [ ] Pagination
+- [ ] View Info
+- [ ] Create Info
+- [ ] Edit Info
+- [ ] Delete Info
+- [ ] Activity owner / IR selection
+- [ ] Status handling
+- [ ] Response handling
+- [ ] Authorization-aware actions
+- [ ] Loading states
+- [ ] Error states
+- [ ] Empty states
+- [ ] Responsive UI
+
+## Invites
+
+- [ ] List
+- [ ] Search/filter
+- [ ] Pagination
+- [ ] View
+- [ ] Create
+- [ ] Edit
+- [ ] Delete
+- [ ] Authorization
+- [ ] Responsive UI
+
+## Plans
+
+- [ ] List
+- [ ] Search/filter
+- [ ] Pagination
+- [ ] View
+- [ ] Create
+- [ ] Edit
+- [ ] Delete
+- [ ] Authorization
+- [ ] Responsive UI
+
+## Closings
+
+- [ ] List
+- [ ] Search/filter
+- [ ] Pagination
+- [ ] View
+- [ ] Create
+- [ ] Edit
+- [ ] Delete
+- [ ] Authorization
+- [ ] Responsive UI
+
+## FG Invites
+
+- [ ] List
+- [ ] Search/filter
+- [ ] Pagination
+- [ ] View
+- [ ] Create
+- [ ] Edit
+- [ ] Delete
+- [ ] Authorization
+- [ ] Responsive UI
+
+## Feel Good / KIV
+
+- [ ] List
+- [ ] Search/filter
+- [ ] Pagination
+- [ ] View
+- [ ] Create
+- [ ] Edit
+- [ ] Delete
+- [ ] Authorization
+- [ ] Responsive UI
 
 ---
 
@@ -401,7 +555,11 @@ Feel Good / KIV
 - [x] JWT testing
 - [x] JWT middleware testing
 - [x] Authorization testing
-- [ ] Full frontend authentication testing
+- [x] CORS testing
+- [x] Frontend authentication testing
+- [x] Frontend Users testing
+- [x] Hierarchy testing
+- [x] User deletion/re-parenting testing
 
 ## Production
 
@@ -413,33 +571,44 @@ Feel Good / KIV
 - [ ] Production JWT secrets
 - [ ] Production authentication testing
 - [ ] Production authorization testing
+- [ ] Production CORS configuration
 
 ---
 
 # Current Milestone
 
-**Complete Frontend Authentication Integration**
+**Frontend Infos Module**
 
-Remaining:
+Build the Infos UI using the existing frontend design system and existing backend APIs.
 
-1. Fix backend OAuth callback → frontend redirect.
-2. Test complete browser login flow.
-3. Verify automatic token refresh.
-4. Verify logout.
-5. Verify protected routes.
+Focus:
 
-Next major milestone:
+1. List Infos.
+2. Search/filter Infos.
+3. Pagination.
+4. View Info.
+5. Create Info.
+6. Edit Info.
+7. Delete Info.
+8. Apply existing hierarchy-based authorization.
+9. Use `ir_id` as activity ownership.
+10. Keep responsive behavior.
+11. Reuse existing loading, error, empty, modal, table and pagination patterns.
 
-**Frontend Application UI + Business Modules**
+Do not modify completed authentication, authorization, Users, or database modules unless an existing bug is discovered.
 
-- Dashboard
-- Users
+---
+
+# Next Major Milestone
+
+**Frontend Activity Flow**
+
 - Infos
 - Invites
 - Plans
 - Closings
 - FG Invites
-- Feel Goods
+- Feel Good / KIV
 
 ---
 
@@ -453,8 +622,11 @@ Next major milestone:
 - Avoid over-engineering.
 - Do not add audit fields unless explicitly requested.
 - Do not change activity ownership rules.
-- ir_id always represents the activity owner.
-- users.upline_id is the source of truth for hierarchy.
+- `ir_id` always represents the activity owner.
+- `users.upline_id` is the source of truth for hierarchy.
 - Use hard delete.
 - Never modify existing migrations.
 - Always create new migrations.
+- Backend remains the security boundary.
+- Frontend permissions are for UX; backend authorization must enforce access.
+- User deletion must preserve descendants through re-parenting.
