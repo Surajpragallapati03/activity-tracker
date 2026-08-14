@@ -1,192 +1,387 @@
-# PROJECT_STATUS.md
-
 # Activity Tracker - Project Status
 
-Last Updated: 2026-08-05
+Last Updated: 2026-08-12
 
 ---
 
-# Current Phase
+# Architecture
 
-Infos module implementation.
-
----
-
-# Completed ✅
-
-## Repository Setup
-
-### Backend
-
-- [x] Backend folder structure
-- [x] Go module initialized
-- [x] Environment files created
-- [x] Makefile created
-- [x] Migrations folder created
-
-### Frontend
-
-- [x] React + Vite initialized
-- [x] TypeScript configured
-- [x] Frontend folder structure created
-
-### Infrastructure
-
-- [x] Docker Compose configured
-- [x] CLAUDE.md configured
-- [x] PROJECT_STATUS.md created
+Frontend
+↓
+API Client
+↓
+Backend
+↓
+Authentication
+↓
+Authorization
+↓
+Services
+↓
+Repository
+↓
+PostgreSQL
 
 ---
 
-## Backend Foundation
+# Infrastructure ✅
 
-- [x] main.go implementation
-- [x] config.go implementation
-- [x] postgres.go implementation
-- [x] routes.go implementation
-- [x] health.go implementation
-
----
-
-## Database
-
-- [x] PostgreSQL container setup
-- [x] Database connection
-- [x] Connection verification
-- [x] Migration setup
-- [x] Users migration created
-- [x] Users table verified
+- [x] Go project setup
+- [x] React + Vite setup
+- [x] PostgreSQL setup
+- [x] Docker Compose setup
+- [x] Makefile
+- [x] GitHub setup
+- [x] Automatic database migrations
+- [x] Startup logging
+- [x] Default admin seeding from environment variables
 
 ---
 
-## Users Module
+# Backend Foundation ✅
 
-### Backend
+- [x] main.go
+- [x] config.go
+- [x] postgres.go
+- [x] routes.go
+- [x] Health endpoint
 
-- [x] User model
-- [x] User repository
-- [x] User service
-- [x] User handler
-- [x] User routes
+---
 
-### APIs
+# Database ✅
 
-- [x] Create user
-- [x] Get user by ID
-- [x] Update user
-- [x] Delete user
-- [x] List users
+- [x] Users table
+- [x] Infos table
+- [x] Invites table
+- [x] Plans table
+- [x] Closings table
+- [x] FG Invites table
+- [x] Feel Goods table
+- [x] Database migrations
+- [x] Automatic migration execution on startup
 
-### Features
+---
 
-- [x] Pagination
+# Business Modules
+
+## Users ✅
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
 - [x] Search
+- [x] Pagination
+- [x] Validation
+- [x] Unique IR ID
+- [x] Unique phone
 - [x] Role validation
 - [x] Status validation
-- [x] Email validation
-- [x] Upline validation
+- [x] Default admin seeding
 
 ---
 
-# In Progress 🚧
+## Infos ✅
 
-## Infos Module
-
-### Database
-
-- [ ] Migration
-
-### Backend
-
-- [ ] Info model
-- [ ] Info repository
-- [ ] Info service
-- [ ] Info handler
-- [ ] Info routes
-
-### APIs
-
-- [ ] Create info
-- [ ] Get info by ID
-- [ ] Update info
-- [ ] Delete info
-- [ ] List infos
-
-### Features
-
-- [ ] Pagination
-- [ ] Search
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+- [x] Response validation: A, AB, B, BC, C
+- [x] Status as free text
 
 ---
 
-# Pending 📋
+## Invites ✅
+
+Rules:
+
+- One Info → One Invite
+- Invite can be updated multiple times
+- Meeting date optional
+- Meeting time optional
+- Mode: virtual / physical
+- Status: free text
+
+Features:
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+- [x] Date/time validation
+
+---
+
+## Plans ✅
+
+Rules:
+
+- One Invite → One Plan
+- Plan can be updated multiple times
+- UL1: free text
+- UL2: free text
+- Quoted amount: string
+- Expected UVS: float
+- Status: free text
+
+Features:
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+
+---
+
+## Closings ✅
+
+Rules:
+
+- One Plan → One Closing
+- Closing can be updated multiple times
+- Closing date: YYYY-MM-DD
+- Status: done / pending
+
+Features:
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+- [x] Date validation
+
+---
+
+## FG Invites ✅
+
+Rules:
+
+- One Closing → One FG Invite
+- FG Invite can be updated multiple times
+- Meeting date optional
+- Meeting time optional
+- Mode: virtual / physical
+- Status: free text
+
+Features:
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+- [x] Date/time validation
+
+---
+
+## Feel Good / KIV ✅
+
+Rules:
+
+- One FG Invite → One Feel Good / KIV
+- Can be updated multiple times
+- UL1: mandatory
+- UL2: mandatory
+- Status: free text
+- Remarks: optional
+- Hard delete
+
+Features:
+
+- [x] Create
+- [x] Get
+- [x] Update
+- [x] Delete
+- [x] List
+- [x] Search
+- [x] Pagination
+- [x] Partial updates
+
+---
+
+# Business Flow ✅
+
+Info
+↓
+Invite
+↓
+Plan
+↓
+Closing
+↓
+FG Invite
+↓
+Feel Good / KIV
+
+---
+
+# Authentication ✅
+
+## Default Admin
+
+- [x] Environment configuration
+- [x] Automatic admin seeding
+- [x] Idempotent admin creation
+
+## Google OAuth
+
+- [x] OAuth configuration
+- [x] Login endpoint
+- [x] OAuth callback
+- [x] Google identity verification
+- [x] Existing-user lookup
+- [x] Unknown-user rejection
+- [x] OAuth state validation
+- [x] Browser OAuth flow
+
+## JWT
+
+- [x] Access token generation
+- [x] Refresh token generation
+- [x] Access token expiry
+- [x] Refresh token expiry
+- [x] Access token validation
+- [x] Refresh token validation
+- [x] Separate access/refresh secrets
+- [x] Token type validation
+- [x] POST /auth/refresh
+
+## JWT Middleware
+
+- [x] Bearer token extraction
+- [x] Access token validation
+- [x] Token type validation
+- [x] User lookup
+- [x] Current user in Gin context
+- [x] Protected business routes
+- [x] Public health endpoint
+- [x] Public authentication endpoints
+
+---
+
+# Authorization ✅
+
+## Admin
+
+- [x] Full access to users
+- [x] Full access to activities
+- [x] Create activities for any user
+- [x] Edit any user's activities
+- [x] Delete any user's activities
+
+## Upline
+
+- [x] Access own activities
+- [x] Access direct downline activities
+- [x] Access indirect downline activities
+- [x] Create downline activities
+- [x] Edit downline activities
+- [x] Delete downline activities
+
+## IR / Independent Distributor
+
+- [x] Access own activities
+- [x] Create own activities
+- [x] Edit own activities
+- [x] Delete own activities
+- [x] Access descendant activities
+
+## Hierarchy
+
+- [x] users.upline_id as hierarchy source
+- [x] Direct downline lookup
+- [x] Indirect downline lookup
+- [x] Recursive hierarchy traversal
+- [x] Hierarchy-based activity access
+- [x] Hierarchy-based activity creation
+- [x] Hierarchy-based activity editing
+- [x] Hierarchy-based activity deletion
+- [x] IR can have downlines
+- [x] IR can be promoted to Upline
+
+## Activity Ownership
+
+- [x] ir_id represents activity owner
+- [x] Logged-in user does not replace ir_id
+- [x] Admin can create for another IR
+- [x] Upline can manage downline activities
+- [x] IR can manage own activities
+- [x] No created_by / updated_by fields
+
+---
+
+# Frontend Authentication 🚧
 
 ## Authentication
 
-### Google OAuth
+- [x] Auth TypeScript models
+- [x] AuthContext
+- [x] useAuth hook
+- [x] Google login button
+- [x] OAuth callback handling
+- [x] Access token handling
+- [x] Refresh token handling
+- [x] Axios Bearer token interceptor
+- [x] Automatic token refresh
+- [x] Request queue during token refresh
+- [x] Logout
+- [x] Auth state persistence
+- [x] Protected routes
+- [x] Login page
+- [x] Basic authenticated dashboard
+- [ ] Backend OAuth callback → frontend redirect
+- [ ] End-to-end browser authentication test
 
-- [ ] Google OAuth setup
-- [ ] OAuth callback
-- [ ] Login API
-- [ ] Logout API
+## Frontend Foundation
 
-### JWT
-
-- [ ] Access token
-- [ ] Refresh token
-- [ ] Token validation
-- [ ] Authentication middleware
-
----
-
-## Business Modules
-
-### Invites
-
-- [ ] Migration
-- [ ] Backend
-- [ ] APIs
-
-### Plans
-
-- [ ] Migration
-- [ ] Backend
-- [ ] APIs
-
-### Closings
-
-- [ ] Migration
-- [ ] Backend
-- [ ] APIs
-
-### FG Invites
-
-- [ ] Migration
-- [ ] Backend
-- [ ] APIs
-
-### Feel Goods
-
-- [ ] Migration
-- [ ] Backend
-- [ ] APIs
-
----
-
-## Frontend
-
-### Foundation
-
-- [ ] React Router setup
-- [ ] API client setup
-- [ ] Authentication setup
-- [ ] Responsive layout
+- [x] React Router
+- [x] API client
+- [x] Authentication integration
+- [x] JWT token handling
+- [x] Token refresh handling
+- [x] Protected routes
+- [ ] Responsive application layout
 - [ ] Sidebar
 - [ ] Header
 
-### Pages
+---
 
-- [ ] Dashboard
+# Frontend Authorization
+
+- [ ] Admin UI permissions
+- [ ] Upline UI permissions
+- [ ] IR UI permissions
+- [ ] Hide unauthorized actions
+- [ ] Activity ownership handling
+- [ ] Protected navigation
+
+---
+
+# Frontend Pages
+
+- [x] Login
+- [x] Basic Dashboard
 - [ ] Users
 - [ ] Infos
 - [ ] Invites
@@ -197,88 +392,69 @@ Infos module implementation.
 
 ---
 
-## Deployment
+# Deployment
 
-### Local
+## Local
 
-- [ ] Environment verification
+- [x] Environment configuration
+- [x] OAuth testing
+- [x] JWT testing
+- [x] JWT middleware testing
+- [x] Authorization testing
+- [ ] Full frontend authentication testing
 
-### Production
+## Production
 
-- [ ] Neon database setup
+- [ ] Neon database
 - [ ] Backend deployment
 - [ ] Frontend deployment
-
----
-
-# Database Rules
-
-- Use UUID as the primary key.
-- Every user must have a unique `ir_id`.
-- `ir_id` is mandatory for all roles.
-- Phone in infos is optional.
-- Use hard delete for activities.
-- Deleting a user deletes all their infos.
-- Only admins can delete users.
-- Never modify existing migrations.
-- Always create new migrations.
-
----
-
-# Infos Rules
-
-Allowed responses:
-
-- A
-- AB
-- B
-- BC
-- C
-
-Rules:
-
-- response is mandatory.
-- response must be one of the allowed values.
-- phone is optional.
-- status is mandatory.
-- status can be any string.
-- ir_id is mandatory.
-- info cannot exist without an owner.
+- [ ] Production OAuth redirect URI
+- [ ] Production environment variables
+- [ ] Production JWT secrets
+- [ ] Production authentication testing
+- [ ] Production authorization testing
 
 ---
 
 # Current Milestone
 
-Implement the Infos module.
+**Complete Frontend Authentication Integration**
 
-Files:
+Remaining:
 
-- backend/migrations/000002_create_infos_table.up.sql
-- backend/migrations/000002_create_infos_table.down.sql
-- backend/internal/models/info.go
-- backend/internal/repository/info_repository.go
-- backend/internal/services/info_service.go
-- backend/internal/handlers/info_handler.go
-- backend/internal/routes/info_routes.go
+1. Fix backend OAuth callback → frontend redirect.
+2. Test complete browser login flow.
+3. Verify automatic token refresh.
+4. Verify logout.
+5. Verify protected routes.
 
-Requirements:
+Next major milestone:
 
-- Create info
-- Get info by ID
-- Update info
-- Delete info
-- List infos
-- Pagination
-- Search by prospect_name and phone
-- Validate response values
+**Frontend Application UI + Business Modules**
+
+- Dashboard
+- Users
+- Infos
+- Invites
+- Plans
+- Closings
+- FG Invites
+- Feel Goods
 
 ---
 
 # Notes
 
 - Empty files are not considered complete.
-- Mark tasks as complete only after implementation and testing.
+- Mark tasks complete only after implementation and testing.
 - Never regenerate completed modules.
 - Follow CLAUDE.md.
-- Keep the implementation simple.
+- Keep implementation simple.
 - Avoid over-engineering.
+- Do not add audit fields unless explicitly requested.
+- Do not change activity ownership rules.
+- ir_id always represents the activity owner.
+- users.upline_id is the source of truth for hierarchy.
+- Use hard delete.
+- Never modify existing migrations.
+- Always create new migrations.

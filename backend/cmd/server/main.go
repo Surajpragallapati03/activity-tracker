@@ -17,19 +17,33 @@ func main() {
 	}
 
 	ctx := context.Background()
+	log.Println("Connecting to database...")
 	db, err := database.New(ctx, cfg.DatabaseURL())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
+	log.Println("Database connected successfully")
 
-	if err := database.RunMigrations(cfg.DatabaseURL()); err != nil {
+	log.Println("Running migrations...")
+	applied, err := database.RunMigrations(cfg.DatabaseURL())
+	if err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
+	if applied {
+		log.Println("Database migrations completed successfully")
+	} else {
+		log.Println("Database is already up to date")
+	}
 
+	if err := database.SeedDefaultAdmin(ctx, db, cfg); err != nil {
+		log.Fatalf("Failed to seed default admin: %v", err)
+	}
+
+	log.Println("Starting HTTP server on :8080")
 	router := gin.Default()
 	_ = router.SetTrustedProxies(nil)
-	routes.Setup(router, db)
+	routes.Setup(router, db, cfg)
 
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

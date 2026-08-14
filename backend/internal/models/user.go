@@ -39,8 +39,8 @@ type UpdateUserRequest struct {
 }
 
 type ListUsersQuery struct {
-	Page   int    `form:"page" binding:"min=1"`
-	Limit  int    `form:"limit" binding:"min=1,max=100"`
+	Page   int    `form:"page"`
+	Limit  int    `form:"limit"`
 	Search string `form:"search"`
 	IRID   string `form:"ir_id"`
 	Status string `form:"status"`

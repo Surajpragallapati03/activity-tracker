@@ -7,22 +7,30 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
 )
 
 type InfoHandler struct {
 	service *services.InfoService
+	authz   *services.AuthorizationService
 }
 
-func NewInfoHandler(service *services.InfoService) *InfoHandler {
-	return &InfoHandler{service: service}
+func NewInfoHandler(service *services.InfoService, authz *services.AuthorizationService) *InfoHandler {
+	return &InfoHandler{service: service, authz: authz}
 }
 
 func (h *InfoHandler) CreateInfo(c *gin.Context) {
 	var req models.CreateInfoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, req.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -61,6 +69,12 @@ func (h *InfoHandler) GetInfo(c *gin.Context) {
 		return
 	}
 
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, info.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	c.JSON(http.StatusOK, info)
 }
 
@@ -71,13 +85,30 @@ func (h *InfoHandler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
+	info, err := h.service.GetInfoByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if info == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Info not found"})
+		return
+	}
+
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, info.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req models.UpdateInfoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	info, err := h.service.UpdateInfo(c.Request.Context(), id, &req)
+	info, err = h.service.UpdateInfo(c.Request.Context(), id, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "info not found") {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Info not found"})
@@ -98,6 +129,23 @@ func (h *InfoHandler) DeleteInfo(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid info ID"})
+		return
+	}
+
+	info, err := h.service.GetInfoByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if info == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Info not found"})
+		return
+	}
+
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, info.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

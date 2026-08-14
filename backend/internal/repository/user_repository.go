@@ -70,6 +70,68 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 	return user, nil
 }
 
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	query := `
+		SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at
+		FROM users
+		WHERE email = $1
+	`
+
+	user := &models.User{}
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.IRID,
+		&user.Name,
+		&user.Email,
+		&user.Phone,
+		&user.Role,
+		&user.UplineID,
+		&user.Status,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *UserRepository) GetByIRID(ctx context.Context, irID string) (*models.User, error) {
+	query := `
+		SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at
+		FROM users
+		WHERE ir_id = $1
+	`
+
+	user := &models.User{}
+	err := r.db.QueryRow(ctx, query, irID).Scan(
+		&user.ID,
+		&user.IRID,
+		&user.Name,
+		&user.Email,
+		&user.Phone,
+		&user.Role,
+		&user.UplineID,
+		&user.Status,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *UserRepository) Update(ctx context.Context, id uuid.UUID, updates *models.UpdateUserRequest) error {
 	query := `
 		UPDATE users

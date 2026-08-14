@@ -8,11 +8,11 @@ import (
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
 )
 
-func SetupInfoRoutes(r *gin.Engine, db *pgxpool.Pool) {
+func SetupInfoRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.AuthorizationService) {
 	userRepo := repository.NewUserRepository(db)
 	infoRepo := repository.NewInfoRepository(db)
 	infoService := services.NewInfoService(infoRepo, userRepo)
-	handler := handlers.NewInfoHandler(infoService)
+	handler := handlers.NewInfoHandler(infoService, authzService)
 
 	infos := r.Group("/infos")
 	{

@@ -8,19 +8,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
 )
 
 type UserHandler struct {
 	service *services.UserService
+	authz   *services.AuthorizationService
 }
 
-func NewUserHandler(service *services.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(service *services.UserService, authz *services.AuthorizationService) *UserHandler {
+	return &UserHandler{service: service, authz: authz}
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
+	currentUser := GetCurrentUser(c)
+	if currentUser.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req models.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -58,6 +66,12 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
+	currentUser := GetCurrentUser(c)
+	if !h.authz.CanAccessUser(c.Request.Context(), currentUser, user) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	c.JSON(http.StatusOK, user)
 }
 
@@ -65,6 +79,23 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	targetUser, err := h.service.GetUserByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if targetUser == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	currentUser := GetCurrentUser(c)
+	if !h.authz.CanAccessUser(c.Request.Context(), currentUser, targetUser) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -98,6 +129,23 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
+	targetUser, err := h.service.GetUserByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if targetUser == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	currentUser := GetCurrentUser(c)
+	if !h.authz.CanAccessUser(c.Request.Context(), currentUser, targetUser) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	err = h.service.DeleteUser(c.Request.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "user not found") {
@@ -124,6 +172,53 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	if query.Limit == 0 {
 		query.Limit = 20
 	}
+	if query.Limit > 100 {
+		query.Limit = 100
+	}
+
+	currentUser := GetCurrentUser(c)
+
+	// Admin can see all users, non-admin can only see themselves and downlines
+	if currentUser.Role != "admin" {
+		// For non-admin, filter to show only accessible users
+		// For now, we'll get all and filter in memory (max 50 users)
+		resp, err := h.service.ListUsers(c.Request.Context(), &models.ListUsersQuery{Page: 1, Limit: 1000})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Filter to only include users that current user can access
+		filtered := []models.User{*currentUser}
+		downlineMap := make(map[uuid.UUID]bool)
+		buildDownlineMap(currentUser.ID, resp.Data, downlineMap)
+
+		for _, user := range resp.Data {
+			if user.ID != currentUser.ID && downlineMap[user.ID] {
+				filtered = append(filtered, user)
+			}
+		}
+
+		// Recalculate total after filtering
+		total := int64(len(filtered))
+		offset := (query.Page - 1) * query.Limit
+		end := offset + query.Limit
+		if offset >= len(filtered) {
+			filtered = []models.User{}
+		} else if end >= len(filtered) {
+			filtered = filtered[offset:]
+		} else {
+			filtered = filtered[offset:end]
+		}
+
+		c.JSON(http.StatusOK, models.ListUsersResponse{
+			Data:  filtered,
+			Total: total,
+			Page:  query.Page,
+			Limit: query.Limit,
+		})
+		return
+	}
 
 	resp, err := h.service.ListUsers(c.Request.Context(), &query)
 	if err != nil {
@@ -132,6 +227,19 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func buildDownlineMap(userID uuid.UUID, allUsers []models.User, downlineMap map[uuid.UUID]bool) {
+	for _, user := range allUsers {
+		if user.UplineID != nil && *user.UplineID == userID {
+			downlineMap[user.ID] = true
+			buildDownlineMap(user.ID, allUsers, downlineMap)
+		}
+	}
+}
+
+func GetCurrentUser(c *gin.Context) *models.User {
+	return middleware.GetUser(c)
 }
 
 func isUniqueConstraintError(err error) bool {

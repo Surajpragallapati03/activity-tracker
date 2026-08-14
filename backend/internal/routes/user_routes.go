@@ -8,10 +8,10 @@ import (
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
 )
 
-func SetupUserRoutes(r *gin.Engine, db *pgxpool.Pool) {
+func SetupUserRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.AuthorizationService) {
 	repo := repository.NewUserRepository(db)
 	service := services.NewUserService(repo)
-	handler := handlers.NewUserHandler(service)
+	handler := handlers.NewUserHandler(service, authzService)
 
 	users := r.Group("/users")
 	{
