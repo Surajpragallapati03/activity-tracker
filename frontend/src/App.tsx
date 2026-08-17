@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from './pages/LoginPage'
 import { Dashboard } from './pages/Dashboard'
 import { Users } from './pages/Users'
+import { Infos } from './pages/Infos'
+import { Invites } from './pages/Invites'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useOAuthCallback } from './hooks/useOAuthCallback'
@@ -42,6 +44,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Users />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/infos"
+        element={
+          <ProtectedRoute>
+            <Infos />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/invites"
+        element={
+          <ProtectedRoute>
+            <Invites />
           </ProtectedRoute>
         }
       />

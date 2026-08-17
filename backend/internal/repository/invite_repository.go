@@ -158,6 +158,17 @@ func (r *InviteRepository) List(ctx context.Context, query *models.ListInvitesQu
 		argNum++
 	}
 
+	if query.IRID != "" {
+		if whereClause != "" {
+			whereClause += " AND"
+		} else {
+			whereClause = "WHERE"
+		}
+		whereClause += fmt.Sprintf(" ir_id = $%d", argNum)
+		args = append(args, query.IRID)
+		argNum++
+	}
+
 	if whereClause == "" {
 		whereClause = "WHERE 1=1"
 	}

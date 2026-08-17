@@ -11,6 +11,32 @@ export interface User {
   updated_at?: string
 }
 
+export interface Info {
+  id: string
+  ir_id: string
+  prospect_name: string
+  phone?: string | null
+  response?: string | null
+  status: string
+  remarks?: string | null
+  created_by: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Invite {
+  id: string
+  info_id: string
+  ir_id: string
+  meeting_date?: string | null
+  meeting_time?: string | null
+  mode: string
+  status: string
+  remarks?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Tokens {
   access_token: string
   refresh_token: string
