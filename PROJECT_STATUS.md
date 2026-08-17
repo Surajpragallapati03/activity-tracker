@@ -1,6 +1,6 @@
 # Activity Tracker - Project Status
 
-Last Updated: 2026-08-14
+Last Updated: 2026-08-17
 
 ---
 
@@ -407,6 +407,12 @@ Feel Good / KIV
 - [x] Responsive Login page
 - [x] Responsive Dashboard
 - [x] Accessibility/focus states
+- [x] Collapsible desktop sidebar
+- [x] Icon-only collapsed sidebar
+- [x] Expandable/collapsible Activities section
+- [x] Sidebar state persistence
+- [x] Responsive sidebar resize behavior
+- [x] Mobile drawer
 
 ---
 
@@ -452,55 +458,66 @@ Feel Good / KIV
 
 ---
 
-# Frontend Authorization
+# Frontend Infos ✅
 
-- [x] Admin UI permissions
-- [x] Upline UI permissions
-- [x] IR UI permissions
-- [x] Hide unauthorized actions
-- [x] Activity ownership handling
-- [x] Protected navigation
-- [x] Hierarchy-aware user actions
+- [x] Infos list
+- [x] Search by prospect name
+- [x] Search by phone
+- [x] Backend pagination
+- [x] Frontend pagination
+- [x] 20 Infos per page
+- [x] View Info
+- [x] Create Info
+- [x] Edit Info
+- [x] Delete Info
+- [x] Activity owner selector
+- [x] Searchable activity owner selector
+- [x] Admin owner filtering
+- [x] Upline owner filtering
+- [x] IR owner filtering
+- [x] Owner change resets pagination
+- [x] Response handling
+- [x] Status handling
+- [x] Loading states
+- [x] Error states
+- [x] Empty states
+- [x] Responsive UI
+- [x] Authorization-aware actions
+
+---
+
+# Frontend Invites 🚧
+
+- [x] List Invites
+- [x] Search/filter
+- [x] Pagination
+- [x] 20 Invites per page
+- [x] Activity owner selector
+- [x] Logged-in user shown first as "(Me)"
+- [x] Owner-based Info filtering
+- [x] Owner → Info → Invite creation flow
+- [x] View Invite
+- [x] Create Invite
+- [x] Edit Invite
+- [x] Delete Invite
+- [x] Authorization-aware actions
+- [x] Loading states
+- [x] Error states
+- [x] Empty states
+- [x] Responsive UI
+- [x] Time input normalization: HH:MM → HH:MM:SS
+- [ ] Final end-to-end Invite testing
 
 ---
 
 # Frontend Business Modules
-
-## Infos
-
-- [ ] List Infos
-- [ ] Search Infos
-- [ ] Pagination
-- [ ] View Info
-- [ ] Create Info
-- [ ] Edit Info
-- [ ] Delete Info
-- [ ] Activity owner / IR selection
-- [ ] Status handling
-- [ ] Response handling
-- [ ] Authorization-aware actions
-- [ ] Loading states
-- [ ] Error states
-- [ ] Empty states
-- [ ] Responsive UI
-
-## Invites
-
-- [ ] List
-- [ ] Search/filter
-- [ ] Pagination
-- [ ] View
-- [ ] Create
-- [ ] Edit
-- [ ] Delete
-- [ ] Authorization
-- [ ] Responsive UI
 
 ## Plans
 
 - [ ] List
 - [ ] Search/filter
 - [ ] Pagination
+- [ ] Activity owner selector
 - [ ] View
 - [ ] Create
 - [ ] Edit
@@ -513,6 +530,7 @@ Feel Good / KIV
 - [ ] List
 - [ ] Search/filter
 - [ ] Pagination
+- [ ] Activity owner selector
 - [ ] View
 - [ ] Create
 - [ ] Edit
@@ -525,6 +543,7 @@ Feel Good / KIV
 - [ ] List
 - [ ] Search/filter
 - [ ] Pagination
+- [ ] Activity owner selector
 - [ ] View
 - [ ] Create
 - [ ] Edit
@@ -537,6 +556,7 @@ Feel Good / KIV
 - [ ] List
 - [ ] Search/filter
 - [ ] Pagination
+- [ ] Activity owner selector
 - [ ] View
 - [ ] Create
 - [ ] Edit
@@ -560,6 +580,10 @@ Feel Good / KIV
 - [x] Frontend Users testing
 - [x] Hierarchy testing
 - [x] User deletion/re-parenting testing
+- [x] Infos frontend testing
+- [x] Sidebar/responsive navigation testing
+- [x] Invites frontend implementation
+- [ ] Invites final end-to-end testing
 
 ## Production
 
@@ -577,38 +601,45 @@ Feel Good / KIV
 
 # Current Milestone
 
-**Frontend Infos Module**
+**Complete and stabilize Frontend Invites Module**
 
-Build the Infos UI using the existing frontend design system and existing backend APIs.
+Immediate task:
 
-Focus:
-
-1. List Infos.
-2. Search/filter Infos.
-3. Pagination.
-4. View Info.
-5. Create Info.
-6. Edit Info.
-7. Delete Info.
-8. Apply existing hierarchy-based authorization.
-9. Use `ir_id` as activity ownership.
-10. Keep responsive behavior.
-11. Reuse existing loading, error, empty, modal, table and pagination patterns.
-
-Do not modify completed authentication, authorization, Users, or database modules unless an existing bug is discovered.
+1. Fix HTML time input conversion from `HH:MM` to backend-required `HH:MM:SS`.
+2. Verify Create Invite.
+3. Verify Edit Invite.
+4. Verify optional meeting time.
+5. Verify authorization.
+6. Verify one Info → one Invite behavior.
+7. Verify pagination and owner filtering.
 
 ---
 
 # Next Major Milestone
 
-**Frontend Activity Flow**
+**Frontend Plans Module**
 
-- Infos
-- Invites
-- Plans
-- Closings
-- FG Invites
-- Feel Good / KIV
+Infos
+↓
+Invites
+↓
+Plans
+↓
+Closings
+↓
+FG Invites
+↓
+Feel Good / KIV
+
+All activity pages should reuse:
+
+- Activity owner selector
+- Pagination
+- Search/filter patterns
+- Authorization rules
+- Existing UI components
+- Responsive layout
+- Existing modal patterns
 
 ---
 
@@ -630,3 +661,5 @@ Do not modify completed authentication, authorization, Users, or database module
 - Backend remains the security boundary.
 - Frontend permissions are for UX; backend authorization must enforce access.
 - User deletion must preserve descendants through re-parenting.
+- Activity owner filtering must only expose users the logged-in user is authorized to access.
+- HTML time inputs may return `HH:MM`; normalize to the backend's `HH:MM:SS` format before API submission.
