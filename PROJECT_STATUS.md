@@ -149,18 +149,6 @@ PostgreSQL
 
 ## FG Invites ✅
 
-Rules:
-
-- One Closing → One FG Invite
-- FG Invite can be updated multiple times
-- Meeting date optional
-- Meeting time optional
-- Mode: virtual / physical
-- Status: free text
-- Remarks: optional
-
-Features:
-
 - [x] CRUD
 - [x] Search
 - [x] Pagination
@@ -173,7 +161,7 @@ Features:
 - [x] Edit FG Invite
 - [x] Delete FG Invite
 - [x] Authorization-aware actions
-- [x] Prospect name resolution: FG Invite → Closing → Plan → Invite → Info
+- [x] Prospect name resolution
 - [x] Meeting date/time display
 - [x] Meeting time converted to HH:MM:SS
 - [x] Remarks display
@@ -183,42 +171,29 @@ Features:
 
 ---
 
-## Feel Good / KIV 🚧
+## Feel Good / KIV ✅
 
-Rules:
-
-- One FG Invite → One Feel Good / KIV
-- Can be updated multiple times
-- UL1: mandatory
-- UL2: mandatory
-- Status: free text
-- Remarks: optional
-- Hard delete
-- ir_id = activity owner
-
-Backend:
-
-- [x] CRUD APIs
+- [x] CRUD
+- [x] Search
 - [x] Pagination
-- [x] Filtering
-- [x] Authorization
-
-Frontend:
-
-- [ ] Page
-- [ ] Activity owner selector
-- [ ] Owner-first create flow
-- [ ] Owner-specific FG Invite filtering
-- [ ] Create Feel Good / KIV
-- [ ] View Feel Good / KIV
-- [ ] Edit Feel Good / KIV
-- [ ] Delete Feel Good / KIV
-- [ ] Pagination
-- [ ] Search/filter
-- [ ] Authorization-aware actions
-- [ ] Prospect name resolution
-- [ ] Loading/error/empty states
-- [ ] Responsive UI
+- [x] Activity owner filtering
+- [x] Owner-first create flow
+- [x] Owner-specific FG Invite filtering
+- [x] Logged-in user shown first as "(Me)"
+- [x] Create Feel Good / KIV
+- [x] View Feel Good / KIV
+- [x] Edit Feel Good / KIV
+- [x] Delete Feel Good / KIV
+- [x] UL1 mandatory
+- [x] UL2 mandatory
+- [x] Status handling
+- [x] Remarks handling
+- [x] Hard delete
+- [x] Authorization-aware actions
+- [x] Prospect name resolution
+- [x] Loading/error/empty states
+- [x] Responsive UI
+- [x] 20 items per page
 
 ---
 
@@ -256,7 +231,8 @@ Feel Good / KIV
 - [x] Unknown-user rejection
 - [x] OAuth state validation
 - [x] Browser OAuth flow
-- [x] Frontend redirect
+- [x] Backend → frontend redirect
+- [x] End-to-end browser authentication
 
 ## JWT
 
@@ -386,7 +362,24 @@ Feel Good / KIV
 - [x] Plans
 - [x] Closings
 - [x] FG Invites
-- [ ] Feel Goods
+- [x] Feel Goods
+
+---
+
+# Local Development Documentation ✅
+
+- [x] Complete local setup instructions in README.md
+- [x] Prerequisites documented
+- [x] Environment variables documented
+- [x] Database setup documented
+- [x] Migration/startup flow documented
+- [x] Backend startup documented
+- [x] Frontend startup documented
+- [x] Google OAuth local setup documented
+- [x] JWT configuration documented
+- [x] Default admin setup documented
+- [x] Local testing flow documented
+- [x] Troubleshooting documented
 
 ---
 
@@ -399,6 +392,7 @@ Feel Good / KIV
 - [x] JWT testing
 - [x] JWT middleware testing
 - [x] Authorization testing
+- [x] CORS testing
 - [x] Frontend authentication testing
 - [x] Users testing
 - [x] Infos testing
@@ -406,6 +400,7 @@ Feel Good / KIV
 - [x] Plans testing
 - [x] Closings testing
 - [x] FG Invites testing
+- [x] Feel Goods testing
 
 ## Production
 
@@ -417,25 +412,37 @@ Feel Good / KIV
 - [ ] Production JWT secrets
 - [ ] Production authentication testing
 - [ ] Production authorization testing
+- [ ] Production CORS configuration
 
 ---
 
 # Current Milestone
 
-**Frontend Business Modules**
+**Local Development Setup & Documentation**
 
-Completed:
+Goal:
 
-1. Users
-2. Infos
-3. Invites
-4. Plans
-5. Closings
-6. FG Invites
+Document the complete process for a new developer to clone the repository, configure the environment, start PostgreSQL, run migrations, start the backend, start the frontend, configure Google OAuth, and access the application locally.
 
-Remaining:
+After this milestone:
 
-7. Feel Goods / KIV
+**Next milestone: Email + Password Authentication**
+
+- Keep Google OAuth.
+- Add email/password login.
+- Reuse existing JWT authentication.
+- Do not introduce a separate authorization mechanism.
+
+---
+
+# Future Milestones
+
+1. Local development documentation
+2. Email + password authentication
+3. Full frontend regression testing
+4. Production deployment
+5. Production authentication testing
+6. Production authorization testing
 
 ---
 
@@ -454,7 +461,9 @@ Remaining:
 - Use hard delete.
 - Never modify existing migrations.
 - Always create new migrations.
-- Frontend activity modules should follow the established Infos/Invites/Plans/Closings/FG Invites patterns.
+- Frontend activity modules should follow the established patterns.
 - Use 20 items per page.
 - Activity owner selector should show the logged-in user first as "(Me)".
 - Owner selection should filter activities by ir_id.
+- Backend remains the security boundary.
+- Frontend permissions are for UX; backend authorization must enforce access.
