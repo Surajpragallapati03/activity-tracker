@@ -62,6 +62,19 @@ export interface Closing {
   updated_at?: string
 }
 
+export interface FGInvite {
+  id: string
+  closing_id: string
+  ir_id: string
+  meeting_date?: string | null
+  meeting_time?: string | null
+  mode: string
+  status: string
+  remarks?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Tokens {
   access_token: string
   refresh_token: string

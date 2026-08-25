@@ -6,6 +6,7 @@ import { Infos } from './pages/Infos'
 import { Invites } from './pages/Invites'
 import { Plans } from './pages/Plans'
 import { Closings } from './pages/Closings'
+import { FGInvites } from './pages/FGInvites'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useOAuthCallback } from './hooks/useOAuthCallback'
@@ -78,6 +79,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Closings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fg-invites"
+        element={
+          <ProtectedRoute>
+            <FGInvites />
           </ProtectedRoute>
         }
       />

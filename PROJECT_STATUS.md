@@ -90,17 +90,6 @@ PostgreSQL
 
 ## Invites ✅
 
-Rules:
-
-- One Info → One Invite
-- Invite can be updated multiple times
-- Meeting date optional
-- Meeting time optional
-- Mode: virtual / physical
-- Status: free text
-
-Features:
-
 - [x] CRUD
 - [x] Search
 - [x] Pagination
@@ -118,19 +107,6 @@ Features:
 ---
 
 ## Plans ✅
-
-Rules:
-
-- One Invite → One Plan
-- Plan can be updated multiple times
-- UL1: free text
-- UL2: free text
-- Quoted amount: string
-- Expected UVS: float
-- Status: free text
-- Remarks: required
-
-Features:
 
 - [x] CRUD
 - [x] Search
@@ -150,16 +126,6 @@ Features:
 ---
 
 ## Closings ✅
-
-Rules:
-
-- One Plan → One Closing
-- Closing can be updated multiple times
-- Closing date: YYYY-MM-DD
-- Status: done / pending
-- Remarks: optional
-
-Features:
 
 - [x] CRUD
 - [x] Search
@@ -181,7 +147,7 @@ Features:
 
 ---
 
-## FG Invites 🚧
+## FG Invites ✅
 
 Rules:
 
@@ -192,6 +158,43 @@ Rules:
 - Mode: virtual / physical
 - Status: free text
 - Remarks: optional
+
+Features:
+
+- [x] CRUD
+- [x] Search
+- [x] Pagination
+- [x] Activity owner filtering
+- [x] Owner-first create flow
+- [x] Owner-specific Closing filtering
+- [x] Logged-in user shown first as "(Me)"
+- [x] Create FG Invite
+- [x] View FG Invite
+- [x] Edit FG Invite
+- [x] Delete FG Invite
+- [x] Authorization-aware actions
+- [x] Prospect name resolution: FG Invite → Closing → Plan → Invite → Info
+- [x] Meeting date/time display
+- [x] Meeting time converted to HH:MM:SS
+- [x] Remarks display
+- [x] Loading/error/empty states
+- [x] Responsive UI
+- [x] 20 items per page
+
+---
+
+## Feel Good / KIV 🚧
+
+Rules:
+
+- One FG Invite → One Feel Good / KIV
+- Can be updated multiple times
+- UL1: mandatory
+- UL2: mandatory
+- Status: free text
+- Remarks: optional
+- Hard delete
+- ir_id = activity owner
 
 Backend:
 
@@ -205,37 +208,17 @@ Frontend:
 - [ ] Page
 - [ ] Activity owner selector
 - [ ] Owner-first create flow
-- [ ] Owner-specific Closing filtering
-- [ ] Create FG Invite
-- [ ] View FG Invite
-- [ ] Edit FG Invite
-- [ ] Delete FG Invite
+- [ ] Owner-specific FG Invite filtering
+- [ ] Create Feel Good / KIV
+- [ ] View Feel Good / KIV
+- [ ] Edit Feel Good / KIV
+- [ ] Delete Feel Good / KIV
 - [ ] Pagination
 - [ ] Search/filter
 - [ ] Authorization-aware actions
 - [ ] Prospect name resolution
-- [ ] Meeting date/time display
-- [ ] Remarks display
+- [ ] Loading/error/empty states
 - [ ] Responsive UI
-
----
-
-## Feel Good / KIV 🚧
-
-Backend:
-
-- [x] CRUD APIs
-- [x] Pagination
-- [x] Filtering
-- [x] Authorization
-
-Frontend:
-
-- [ ] Page
-- [ ] CRUD UI
-- [ ] Activity owner selector
-- [ ] Pagination
-- [ ] Authorization-aware actions
 
 ---
 
@@ -402,7 +385,7 @@ Feel Good / KIV
 - [x] Invites
 - [x] Plans
 - [x] Closings
-- [ ] FG Invites
+- [x] FG Invites
 - [ ] Feel Goods
 
 ---
@@ -422,6 +405,7 @@ Feel Good / KIV
 - [x] Invites testing
 - [x] Plans testing
 - [x] Closings testing
+- [x] FG Invites testing
 
 ## Production
 
@@ -447,10 +431,10 @@ Completed:
 3. Invites
 4. Plans
 5. Closings
+6. FG Invites
 
 Remaining:
 
-6. FG Invites
 7. Feel Goods / KIV
 
 ---
@@ -470,7 +454,7 @@ Remaining:
 - Use hard delete.
 - Never modify existing migrations.
 - Always create new migrations.
-- Frontend activity modules should follow the established Infos/Invites/Plans/Closings patterns.
+- Frontend activity modules should follow the established Infos/Invites/Plans/Closings/FG Invites patterns.
 - Use 20 items per page.
 - Activity owner selector should show the logged-in user first as "(Me)".
 - Owner selection should filter activities by ir_id.
