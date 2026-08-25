@@ -75,6 +75,18 @@ export interface FGInvite {
   updated_at?: string
 }
 
+export interface FeelGood {
+  id: string
+  fg_invite_id: string
+  ir_id: string
+  ul1: string
+  ul2: string
+  status: string
+  remarks?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Tokens {
   access_token: string
   refresh_token: string
