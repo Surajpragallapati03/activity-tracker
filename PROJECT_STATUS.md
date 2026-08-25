@@ -1,6 +1,6 @@
 # Activity Tracker - Project Status
 
-Last Updated: 2026-08-17
+Last Updated: 2026-08-25
 
 ---
 
@@ -38,17 +38,6 @@ PostgreSQL
 
 ---
 
-# Backend Foundation ✅
-
-- [x] main.go
-- [x] config.go
-- [x] postgres.go
-- [x] routes.go
-- [x] Health endpoint
-- [x] CORS middleware
-
----
-
 # Database ✅
 
 - [x] Users table
@@ -59,60 +48,47 @@ PostgreSQL
 - [x] FG Invites table
 - [x] Feel Goods table
 - [x] Database migrations
-- [x] Automatic migration execution on startup
+- [x] Automatic migration execution
 
 ---
 
 # Business Modules
 
-## Users Backend ✅
+## Users ✅
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
+- [x] CRUD
 - [x] Search
 - [x] Pagination
 - [x] Validation
 - [x] Unique IR ID
 - [x] Unique phone
-- [x] Role validation
-- [x] Status validation
+- [x] Role/status validation
 - [x] Default admin seeding
-- [x] Upline hierarchy
-- [x] Direct downline handling
-- [x] Indirect downline handling
-- [x] Hierarchy-based authorization
-- [x] Everyone can create users
-- [x] IR can create users
-- [x] IR promotion to upline
-- [x] Only admin can delete users
-- [x] Self-delete prevention
-- [x] Hierarchy-safe deletion
-- [x] Downline re-parenting on deletion
-- [x] Atomic delete + re-parenting
+- [x] Hierarchy-based access
+- [x] User creation by all authenticated users
+- [x] IR promotion to Upline
+- [x] Self profile editing
+- [x] Admin-only deletion
+- [x] Hierarchy-safe deletion with reparenting
+- [x] 20 users per page
 
 ---
 
-## Infos Backend ✅
+## Infos ✅
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
+- [x] CRUD
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
-- [x] Authorization
-- [x] Activity ownership through ir_id
 - [x] Response validation: A, AB, B, BC, C
 - [x] Status as free text
+- [x] Activity owner filtering
+- [x] Hierarchy-aware owner selection
+- [x] 20 items per page
 
 ---
 
-## Invites Backend ✅
+## Invites ✅
 
 Rules:
 
@@ -125,21 +101,23 @@ Rules:
 
 Features:
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
+- [x] CRUD
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
 - [x] Date/time validation
-- [x] Authorization
-- [x] IR ID filtering
+- [x] Activity owner filtering
+- [x] Owner-first create flow
+- [x] Owner-specific Info filtering
+- [x] Logged-in user shown first as "(Me)"
+- [x] Meeting time converted to HH:MM:SS
+- [x] Meeting time displayed
+- [x] Remarks displayed
+- [x] Hierarchy-aware filtering
 
 ---
 
-## Plans Backend ✅
+## Plans ✅
 
 Rules:
 
@@ -150,22 +128,28 @@ Rules:
 - Quoted amount: string
 - Expected UVS: float
 - Status: free text
+- Remarks: required
 
 Features:
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
+- [x] CRUD
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
-- [x] Authorization
+- [x] Activity owner filtering
+- [x] Owner-first create flow
+- [x] Owner-specific Invite filtering
+- [x] Logged-in user shown first as "(Me)"
+- [x] Correct invite_id mapping
+- [x] Correct expected_uvs mapping
+- [x] Remarks mapping
+- [x] Prospect name resolution: Plan → Invite → Info
+- [x] Hierarchy-aware authorization
+- [x] 20 items per page
 
 ---
 
-## Closings Backend ✅
+## Closings ✅
 
 Rules:
 
@@ -173,23 +157,31 @@ Rules:
 - Closing can be updated multiple times
 - Closing date: YYYY-MM-DD
 - Status: done / pending
+- Remarks: optional
 
 Features:
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
+- [x] CRUD
 - [x] Search
 - [x] Pagination
 - [x] Partial updates
-- [x] Date validation
-- [x] Authorization
+- [x] Activity owner filtering
+- [x] Owner-first create flow
+- [x] Owner-specific Plan filtering
+- [x] Logged-in user shown first as "(Me)"
+- [x] Create Closing
+- [x] View Closing
+- [x] Edit Closing
+- [x] Delete Closing
+- [x] Prospect name resolution: Closing → Plan → Invite → Info
+- [x] Hierarchy-aware authorization
+- [x] Responsive UI
+- [x] Loading/error/empty states
+- [x] 20 items per page
 
 ---
 
-## FG Invites Backend ✅
+## FG Invites 🚧
 
 Rules:
 
@@ -199,45 +191,51 @@ Rules:
 - Meeting time optional
 - Mode: virtual / physical
 - Status: free text
+- Remarks: optional
 
-Features:
+Backend:
 
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
-- [x] Search
+- [x] CRUD APIs
 - [x] Pagination
-- [x] Partial updates
-- [x] Date/time validation
+- [x] Filtering
 - [x] Authorization
+
+Frontend:
+
+- [ ] Page
+- [ ] Activity owner selector
+- [ ] Owner-first create flow
+- [ ] Owner-specific Closing filtering
+- [ ] Create FG Invite
+- [ ] View FG Invite
+- [ ] Edit FG Invite
+- [ ] Delete FG Invite
+- [ ] Pagination
+- [ ] Search/filter
+- [ ] Authorization-aware actions
+- [ ] Prospect name resolution
+- [ ] Meeting date/time display
+- [ ] Remarks display
+- [ ] Responsive UI
 
 ---
 
-## Feel Good / KIV Backend ✅
+## Feel Good / KIV 🚧
 
-Rules:
+Backend:
 
-- One FG Invite → One Feel Good / KIV
-- Can be updated multiple times
-- UL1: mandatory
-- UL2: mandatory
-- Status: free text
-- Remarks: optional
-- Hard delete
-
-Features:
-
-- [x] Create
-- [x] Get
-- [x] Update
-- [x] Delete
-- [x] List
-- [x] Search
+- [x] CRUD APIs
 - [x] Pagination
-- [x] Partial updates
+- [x] Filtering
 - [x] Authorization
+
+Frontend:
+
+- [ ] Page
+- [ ] CRUD UI
+- [ ] Activity owner selector
+- [ ] Pagination
+- [ ] Authorization-aware actions
 
 ---
 
@@ -275,8 +273,7 @@ Feel Good / KIV
 - [x] Unknown-user rejection
 - [x] OAuth state validation
 - [x] Browser OAuth flow
-- [x] Backend → frontend OAuth redirect
-- [x] End-to-end browser login
+- [x] Frontend redirect
 
 ## JWT
 
@@ -307,38 +304,20 @@ Feel Good / KIV
 
 ## Admin
 
-- [x] Full access to all users
-- [x] Full access to all activities
-- [x] Create users
-- [x] Create activities for any IR
-- [x] Edit any user
-- [x] Edit any activity
-- [x] Delete any user
-- [x] Delete any activity
-- [x] Choose upline when creating users
+- [x] Full access to users
+- [x] Full access to activities
+- [x] Create activities for any user
+- [x] Edit any user's activities
+- [x] Delete any user's activities
 
-## Upline
+## Upline / IR
 
-- [x] View self
-- [x] View direct downlines
-- [x] View indirect downlines
-- [x] Edit self
-- [x] Edit downlines
-- [x] Create users
-- [x] Create users under self
-- [x] Manage permitted activities
-
-## IR
-
-- [x] View self
-- [x] View direct downlines
-- [x] View indirect downlines
-- [x] Edit self
-- [x] Edit downlines
-- [x] Create users
-- [x] Create users under self
-- [x] IR can be promoted to upline
-- [x] Manage permitted activities
+- [x] Access own activities
+- [x] Access direct downline activities
+- [x] Access indirect downline activities
+- [x] Create downline activities
+- [x] Edit downline activities
+- [x] Delete downline activities
 
 ## Hierarchy
 
@@ -346,24 +325,39 @@ Feel Good / KIV
 - [x] Direct downline lookup
 - [x] Indirect downline lookup
 - [x] Recursive hierarchy traversal
-- [x] Hierarchy-based user access
 - [x] Hierarchy-based activity access
-- [x] Hierarchy-based user creation
 - [x] Hierarchy-based activity creation
-- [x] Hierarchy-based editing
-- [x] Hierarchy-safe deletion
-- [x] Downline re-parenting
+- [x] Hierarchy-based activity editing
+- [x] Hierarchy-based activity deletion
 - [x] IR can have downlines
 - [x] IR can be promoted to Upline
+- [x] Reparenting when admin deletes an Upline
 
 ## Activity Ownership
 
 - [x] ir_id represents activity owner
 - [x] Logged-in user does not replace ir_id
-- [x] Admin can create activity for another IR
-- [x] Upline can manage permitted downline activities
-- [x] IR can manage permitted activities
+- [x] Admin can create for another IR
+- [x] Upline can manage downline activities
+- [x] IR can manage own activities
 - [x] No created_by / updated_by fields
+
+---
+
+# Frontend UI Foundation ✅
+
+- [x] Tailwind CSS
+- [x] Responsive layout
+- [x] Header
+- [x] Sidebar
+- [x] Collapsible sidebar
+- [x] Mobile navigation drawer
+- [x] Expand/collapse Activities section
+- [x] Sidebar state persistence
+- [x] Responsive content width
+- [x] Login page
+- [x] Dashboard layout
+- [x] Reusable UI components
 
 ---
 
@@ -376,203 +370,40 @@ Feel Good / KIV
 - [x] OAuth callback handling
 - [x] Access token handling
 - [x] Refresh token handling
-- [x] Axios Bearer interceptor
+- [x] Axios Bearer token interceptor
 - [x] Automatic token refresh
 - [x] Request queue during token refresh
 - [x] Logout
 - [x] Auth state persistence
 - [x] Protected routes
-- [x] Login page
-- [x] Dashboard
-- [x] Backend OAuth callback → frontend redirect
 - [x] End-to-end browser authentication
 
 ---
 
-# Frontend Foundation ✅
+# Frontend Authorization ✅
 
-- [x] React Router
-- [x] API client
-- [x] Authentication integration
-- [x] JWT token handling
-- [x] Token refresh handling
-- [x] Protected routes
-- [x] Responsive application layout
-- [x] Responsive sidebar
-- [x] Responsive header
-- [x] Theme/color system
-- [x] Typography system
-- [x] Reusable UI components
-- [x] Consistent spacing/layout system
-- [x] Mobile navigation
-- [x] Responsive Login page
-- [x] Responsive Dashboard
-- [x] Accessibility/focus states
-- [x] Collapsible desktop sidebar
-- [x] Icon-only collapsed sidebar
-- [x] Expandable/collapsible Activities section
-- [x] Sidebar state persistence
-- [x] Responsive sidebar resize behavior
-- [x] Mobile drawer
-
----
-
-# Frontend Dashboard + Users ✅
-
-## Dashboard
-
-- [x] Real authenticated user information
-- [x] User statistics
-- [x] Account information
-- [x] Edit Profile
-- [x] Edit own name
-- [x] Edit own email
-- [x] Edit own phone
-- [x] Edit own status
-- [x] Responsive dashboard
-
-## Users
-
-- [x] Users list
-- [x] Search by name
-- [x] Search by email
-- [x] Search by IR ID
-- [x] Backend pagination
-- [x] Frontend pagination
-- [x] 20 users per page
-- [x] View user
-- [x] Create user
-- [x] Edit user
-- [x] Delete user
-- [x] Upline selection
-- [x] Role selection
-- [x] Loading states
-- [x] Error states
-- [x] Empty states
-- [x] Confirmation before delete
-- [x] Hierarchy-aware permissions
-- [x] Admin full access
-- [x] Upline hierarchy access
-- [x] IR hierarchy access
-- [x] Self-delete prevention
-- [x] Downline re-parenting
-
----
-
-# Frontend Infos ✅
-
-- [x] Infos list
-- [x] Search by prospect name
-- [x] Search by phone
-- [x] Backend pagination
-- [x] Frontend pagination
-- [x] 20 Infos per page
-- [x] View Info
-- [x] Create Info
-- [x] Edit Info
-- [x] Delete Info
+- [x] Admin UI permissions
+- [x] Upline UI permissions
+- [x] IR UI permissions
+- [x] Hide unauthorized actions
+- [x] Activity ownership handling
+- [x] Protected navigation
 - [x] Activity owner selector
-- [x] Searchable activity owner selector
-- [x] Admin owner filtering
-- [x] Upline owner filtering
-- [x] IR owner filtering
-- [x] Owner change resets pagination
-- [x] Response handling
-- [x] Status handling
-- [x] Loading states
-- [x] Error states
-- [x] Empty states
-- [x] Responsive UI
-- [x] Authorization-aware actions
+- [x] Hierarchy-aware owner filtering
 
 ---
 
-# Frontend Invites ✅
+# Frontend Pages
 
-- [x] List Invites
-- [x] Search/filter
-- [x] Pagination
-- [x] 20 Invites per page
-- [x] Activity owner selector
-- [x] Logged-in user shown first as "(Me)"
-- [x] Owner-based Info filtering
-- [x] Owner → Info → Invite creation flow
-- [x] View Invite
-- [x] Create Invite
-- [x] Edit Invite
-- [x] Delete Invite
-- [x] Authorization-aware actions
-- [x] Loading states
-- [x] Error states
-- [x] Empty states
-- [x] Responsive UI
-- [x] Meeting time normalization: HH:MM → HH:MM:SS
-- [x] Meeting time displayed in list
-- [x] Remarks displayed in list
-- [x] Full remarks available in View modal
-- [x] Backend IR ID filtering
-- [x] Owner filtering verified end-to-end
-- [x] Pagination resets when owner changes
-
----
-
-# Frontend Business Modules
-
-## Plans 🚧
-
-- [ ] List
-- [ ] Search/filter
-- [ ] Pagination
-- [ ] Activity owner selector
-- [ ] Owner-based Invite selection
-- [ ] View
-- [ ] Create
-- [ ] Edit
-- [ ] Delete
-- [ ] Authorization
-- [ ] Loading states
-- [ ] Error states
-- [ ] Empty states
-- [ ] Responsive UI
-
-## Closings
-
-- [ ] List
-- [ ] Search/filter
-- [ ] Pagination
-- [ ] Activity owner selector
-- [ ] View
-- [ ] Create
-- [ ] Edit
-- [ ] Delete
-- [ ] Authorization
-- [ ] Responsive UI
-
-## FG Invites
-
-- [ ] List
-- [ ] Search/filter
-- [ ] Pagination
-- [ ] Activity owner selector
-- [ ] View
-- [ ] Create
-- [ ] Edit
-- [ ] Delete
-- [ ] Authorization
-- [ ] Responsive UI
-
-## Feel Good / KIV
-
-- [ ] List
-- [ ] Search/filter
-- [ ] Pagination
-- [ ] Activity owner selector
-- [ ] View
-- [ ] Create
-- [ ] Edit
-- [ ] Delete
-- [ ] Authorization
-- [ ] Responsive UI
+- [x] Login
+- [x] Dashboard
+- [x] Users
+- [x] Infos
+- [x] Invites
+- [x] Plans
+- [x] Closings
+- [ ] FG Invites
+- [ ] Feel Goods
 
 ---
 
@@ -585,16 +416,12 @@ Feel Good / KIV
 - [x] JWT testing
 - [x] JWT middleware testing
 - [x] Authorization testing
-- [x] CORS testing
 - [x] Frontend authentication testing
-- [x] Frontend Users testing
-- [x] Hierarchy testing
-- [x] User deletion/re-parenting testing
-- [x] Infos frontend testing
-- [x] Sidebar/responsive navigation testing
-- [x] Invites frontend testing
-- [x] Invites owner filtering testing
-- [x] Invites time format testing
+- [x] Users testing
+- [x] Infos testing
+- [x] Invites testing
+- [x] Plans testing
+- [x] Closings testing
 
 ## Production
 
@@ -606,56 +433,25 @@ Feel Good / KIV
 - [ ] Production JWT secrets
 - [ ] Production authentication testing
 - [ ] Production authorization testing
-- [ ] Production CORS configuration
 
 ---
 
 # Current Milestone
 
-**Frontend Plans Module**
+**Frontend Business Modules**
 
-Implement the Plans UI using the existing working Infos and Invites patterns.
+Completed:
 
-Focus:
+1. Users
+2. Infos
+3. Invites
+4. Plans
+5. Closings
 
-1. List Plans.
-2. Search/filter Plans.
-3. Pagination with 20 items per page.
-4. Activity owner selector.
-5. Owner → eligible Invite selection.
-6. View Plan.
-7. Create Plan.
-8. Edit Plan.
-9. Delete Plan.
-10. Apply existing hierarchy-based authorization.
-11. Preserve responsive UI.
-12. Reuse existing loading/error/empty/pagination patterns.
+Remaining:
 
----
-
-# Business Flow
-
-Info
-↓
-Invite
-↓
-Plan
-↓
-Closing
-↓
-FG Invite
-↓
-Feel Good / KIV
-
-For frontend creation flows:
-
-- Infos belong to an activity owner.
-- Invites are created from an owner's eligible Infos.
-- Plans should be created from an owner's eligible Invites.
-- The activity owner should be selected first.
-- Only records belonging to that selected owner should be displayed.
-- The activity `ir_id` should come from the selected owner/parent activity.
-- Do not ask users to manually enter duplicate ownership information.
+6. FG Invites
+7. Feel Goods / KIV
 
 ---
 
@@ -669,14 +465,12 @@ For frontend creation flows:
 - Avoid over-engineering.
 - Do not add audit fields unless explicitly requested.
 - Do not change activity ownership rules.
-- `ir_id` always represents the activity owner.
-- `users.upline_id` is the source of truth for hierarchy.
+- ir_id always represents the activity owner.
+- users.upline_id is the source of truth for hierarchy.
 - Use hard delete.
 - Never modify existing migrations.
 - Always create new migrations.
-- Backend remains the security boundary.
-- Frontend permissions are for UX; backend authorization must enforce access.
-- User deletion must preserve descendants through re-parenting.
-- Activity owner filtering must only expose users the logged-in user is authorized to access.
-- HTML time inputs may return `HH:MM`; normalize to backend `HH:MM:SS` before API submission.
-- Reuse proven patterns from completed frontend modules instead of creating new architecture.
+- Frontend activity modules should follow the established Infos/Invites/Plans/Closings patterns.
+- Use 20 items per page.
+- Activity owner selector should show the logged-in user first as "(Me)".
+- Owner selection should filter activities by ir_id.

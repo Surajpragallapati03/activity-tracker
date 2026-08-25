@@ -5,6 +5,7 @@ import { Users } from './pages/Users'
 import { Infos } from './pages/Infos'
 import { Invites } from './pages/Invites'
 import { Plans } from './pages/Plans'
+import { Closings } from './pages/Closings'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useOAuthCallback } from './hooks/useOAuthCallback'
@@ -69,6 +70,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Plans />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/closings"
+        element={
+          <ProtectedRoute>
+            <Closings />
           </ProtectedRoute>
         }
       />

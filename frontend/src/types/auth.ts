@@ -51,6 +51,17 @@ export interface Plan {
   updated_at?: string
 }
 
+export interface Closing {
+  id: string
+  plan_id: string
+  ir_id: string
+  closing_date?: string | null
+  status: string
+  remarks?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Tokens {
   access_token: string
   refresh_token: string
