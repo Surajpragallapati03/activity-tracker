@@ -135,6 +135,7 @@ Features:
 - [x] Partial updates
 - [x] Date/time validation
 - [x] Authorization
+- [x] IR ID filtering
 
 ---
 
@@ -486,7 +487,7 @@ Feel Good / KIV
 
 ---
 
-# Frontend Invites 🚧
+# Frontend Invites ✅
 
 - [x] List Invites
 - [x] Search/filter
@@ -505,24 +506,33 @@ Feel Good / KIV
 - [x] Error states
 - [x] Empty states
 - [x] Responsive UI
-- [x] Time input normalization: HH:MM → HH:MM:SS
-- [ ] Final end-to-end Invite testing
+- [x] Meeting time normalization: HH:MM → HH:MM:SS
+- [x] Meeting time displayed in list
+- [x] Remarks displayed in list
+- [x] Full remarks available in View modal
+- [x] Backend IR ID filtering
+- [x] Owner filtering verified end-to-end
+- [x] Pagination resets when owner changes
 
 ---
 
 # Frontend Business Modules
 
-## Plans
+## Plans 🚧
 
 - [ ] List
 - [ ] Search/filter
 - [ ] Pagination
 - [ ] Activity owner selector
+- [ ] Owner-based Invite selection
 - [ ] View
 - [ ] Create
 - [ ] Edit
 - [ ] Delete
 - [ ] Authorization
+- [ ] Loading states
+- [ ] Error states
+- [ ] Empty states
 - [ ] Responsive UI
 
 ## Closings
@@ -582,8 +592,9 @@ Feel Good / KIV
 - [x] User deletion/re-parenting testing
 - [x] Infos frontend testing
 - [x] Sidebar/responsive navigation testing
-- [x] Invites frontend implementation
-- [ ] Invites final end-to-end testing
+- [x] Invites frontend testing
+- [x] Invites owner filtering testing
+- [x] Invites time format testing
 
 ## Production
 
@@ -601,45 +612,50 @@ Feel Good / KIV
 
 # Current Milestone
 
-**Complete and stabilize Frontend Invites Module**
+**Frontend Plans Module**
 
-Immediate task:
+Implement the Plans UI using the existing working Infos and Invites patterns.
 
-1. Fix HTML time input conversion from `HH:MM` to backend-required `HH:MM:SS`.
-2. Verify Create Invite.
-3. Verify Edit Invite.
-4. Verify optional meeting time.
-5. Verify authorization.
-6. Verify one Info → one Invite behavior.
-7. Verify pagination and owner filtering.
+Focus:
+
+1. List Plans.
+2. Search/filter Plans.
+3. Pagination with 20 items per page.
+4. Activity owner selector.
+5. Owner → eligible Invite selection.
+6. View Plan.
+7. Create Plan.
+8. Edit Plan.
+9. Delete Plan.
+10. Apply existing hierarchy-based authorization.
+11. Preserve responsive UI.
+12. Reuse existing loading/error/empty/pagination patterns.
 
 ---
 
-# Next Major Milestone
+# Business Flow
 
-**Frontend Plans Module**
-
-Infos
+Info
 ↓
-Invites
+Invite
 ↓
-Plans
+Plan
 ↓
-Closings
+Closing
 ↓
-FG Invites
+FG Invite
 ↓
 Feel Good / KIV
 
-All activity pages should reuse:
+For frontend creation flows:
 
-- Activity owner selector
-- Pagination
-- Search/filter patterns
-- Authorization rules
-- Existing UI components
-- Responsive layout
-- Existing modal patterns
+- Infos belong to an activity owner.
+- Invites are created from an owner's eligible Infos.
+- Plans should be created from an owner's eligible Invites.
+- The activity owner should be selected first.
+- Only records belonging to that selected owner should be displayed.
+- The activity `ir_id` should come from the selected owner/parent activity.
+- Do not ask users to manually enter duplicate ownership information.
 
 ---
 
@@ -662,4 +678,5 @@ All activity pages should reuse:
 - Frontend permissions are for UX; backend authorization must enforce access.
 - User deletion must preserve descendants through re-parenting.
 - Activity owner filtering must only expose users the logged-in user is authorized to access.
-- HTML time inputs may return `HH:MM`; normalize to the backend's `HH:MM:SS` format before API submission.
+- HTML time inputs may return `HH:MM`; normalize to backend `HH:MM:SS` before API submission.
+- Reuse proven patterns from completed frontend modules instead of creating new architecture.

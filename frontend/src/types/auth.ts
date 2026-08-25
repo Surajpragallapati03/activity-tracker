@@ -37,6 +37,20 @@ export interface Invite {
   updated_at?: string
 }
 
+export interface Plan {
+  id: string
+  invite_id: string
+  ir_id: string
+  ul1: string
+  ul2: string
+  quoted_amount: string
+  expected_uvs: number
+  status: string
+  remarks?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Tokens {
   access_token: string
   refresh_token: string
