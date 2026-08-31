@@ -7,16 +7,20 @@ import (
 )
 
 type User struct {
-	ID       uuid.UUID  `json:"id"`
-	IRID     string     `json:"ir_id"`
-	Name     string     `json:"name"`
-	Email    string     `json:"email"`
-	Phone    string     `json:"phone"`
-	Role     string     `json:"role"`
-	UplineID *uuid.UUID `json:"upline_id"`
-	Status   string     `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           uuid.UUID  `json:"id"`
+	IRID         string     `json:"ir_id"`
+	Name         string     `json:"name"`
+	Email        string     `json:"email"`
+	Phone        string     `json:"phone"`
+	Role         string     `json:"role"`
+	UplineID     *uuid.UUID `json:"upline_id"`
+	Status       string     `json:"status"`
+	PasswordHash *string    `json:"-"`
+	PlansShown   int        `json:"plans_shown"`
+	DrsHit       int        `json:"drs_hit"`
+	PictureURL   *string    `json:"picture_url"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
 type CreateUserRequest struct {
@@ -27,15 +31,19 @@ type CreateUserRequest struct {
 	Role     string     `json:"role" binding:"required"`
 	UplineID *uuid.UUID `json:"upline_id"`
 	Status   string     `json:"status"`
+	Password string     `json:"password"`
 }
 
 type UpdateUserRequest struct {
-	Name     string     `json:"name"`
-	Email    string     `json:"email"`
-	Phone    string     `json:"phone"`
-	Role     string     `json:"role"`
-	UplineID *uuid.UUID `json:"upline_id"`
-	Status   string     `json:"status"`
+	Name       string     `json:"name"`
+	Email      string     `json:"email"`
+	Phone      string     `json:"phone"`
+	Role       string     `json:"role"`
+	UplineID   *uuid.UUID `json:"upline_id"`
+	Status     string     `json:"status"`
+	Password   string     `json:"password"`
+	PlansShown *int       `json:"plans_shown"`
+	DrsHit     *int       `json:"drs_hit"`
 }
 
 type ListUsersQuery struct {

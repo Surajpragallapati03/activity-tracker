@@ -5,11 +5,13 @@ import { Sidebar } from '../components/Sidebar'
 
 interface DashboardLayoutProps {
   children: ReactNode
+  onProfileClick?: () => void
+  onPasswordClick?: () => void
 }
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, onProfileClick, onPasswordClick }: DashboardLayoutProps) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     return stored ? JSON.parse(stored) : false
@@ -20,8 +22,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [isCollapsed])
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <Header onProfileClick={onProfileClick} onPasswordClick={onPasswordClick} />
       <div className="flex pt-16">
         <Sidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setIsCollapsed(!isCollapsed)} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full overflow-auto transition-all duration-300">

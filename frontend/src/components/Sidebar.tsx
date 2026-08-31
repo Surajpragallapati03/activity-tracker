@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight } from 'lucide-react'
+import { Menu, X, ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight, TrendingUp, Bookmark, BarChart3 } from 'lucide-react'
 
 interface SidebarProps {
   isCollapsed: boolean
@@ -15,6 +15,9 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
   const mainItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/users', label: 'Users', icon: Users },
+    { href: '/pipeline-updates', label: 'Pipeline Updates', icon: TrendingUp },
+    { href: '/kiv', label: 'KIV', icon: Bookmark },
+    { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/infos', label: 'Infos', icon: FileText },
   ]
 
@@ -60,14 +63,14 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ${
+      <aside className={`hidden lg:flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          {!isCollapsed && <span className="text-sm font-semibold text-slate-900">Menu</span>}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+          {!isCollapsed && <span className="text-sm font-semibold text-slate-900 dark:text-white">Menu</span>}
           <button
             onClick={onToggleCollapsed}
-            className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
             title={isCollapsed ? 'Expand' : 'Collapse'}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -81,10 +84,10 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
           ))}
 
           {/* Activities Section */}
-          <div className="mt-6 pt-6 border-t border-slate-200">
+          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setIsActivitiesOpen(!isActivitiesOpen)}
-              className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors text-sm font-medium ${
+              className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm font-medium ${
                 isCollapsed ? 'justify-center' : ''
               }`}
               title={isCollapsed ? 'Activities' : ''}
@@ -115,7 +118,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
 
       {/* Mobile sidebar */}
       <aside
-        className={`fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-slate-200 overflow-y-auto z-30 transition-transform duration-300 lg:hidden ${
+        className={`fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 overflow-y-auto z-30 transition-transform duration-300 lg:hidden ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -131,10 +134,10 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
             </Link>
           ))}
 
-          <div className="mt-6 pt-6 border-t border-slate-200">
+          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setIsActivitiesOpen(!isActivitiesOpen)}
-              className="w-full flex items-center justify-between px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-between px-4 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm font-medium"
             >
               <span>Activities</span>
               <ChevronDown

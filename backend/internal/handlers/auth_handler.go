@@ -54,13 +54,16 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	}
 
 	userData := gin.H{
-		"id":        user.ID,
-		"ir_id":     user.IRID,
-		"name":      user.Name,
-		"email":     user.Email,
-		"role":      user.Role,
-		"status":    user.Status,
-		"upline_id": user.UplineID,
+		"id":            user.ID,
+		"ir_id":         user.IRID,
+		"name":          user.Name,
+		"email":         user.Email,
+		"role":          user.Role,
+		"status":        user.Status,
+		"upline_id":     user.UplineID,
+		"plans_shown":   user.PlansShown,
+		"drs_hit":       user.DrsHit,
+		"picture_url":   user.PictureURL,
 	}
 
 	userJSON, err := json.Marshal(userData)
@@ -78,8 +81,51 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
+type LoginRequest struct {
+	IRID     string `json:"ir_id" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+func (h *AuthHandler) LoginPassword(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing ir_id or password"})
+		return
+	}
+
+	user, tokens, err := h.service.LoginWithPassword(c.Request.Context(), req.IRID, req.Password)
+	if err != nil {
+		if strings.Contains(err.Error(), "inactive user") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "inactive user"})
+			return
+		}
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	userData := gin.H{
+		"id":            user.ID,
+		"ir_id":         user.IRID,
+		"name":          user.Name,
+		"email":         user.Email,
+		"role":          user.Role,
+		"status":        user.Status,
+		"upline_id":     user.UplineID,
+		"plans_shown":   user.PlansShown,
+		"drs_hit":       user.DrsHit,
+		"picture_url":   user.PictureURL,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"token_type":    tokens.TokenType,
+		"user":          userData,
+	})
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {

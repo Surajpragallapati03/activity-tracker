@@ -217,8 +217,8 @@ export const Plans = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">Plans</h2>
-            <p className="mt-1 text-slate-600">Manage prospect plans</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Plans</h2>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Manage prospect plans</p>
           </div>
           {canCreatePlan && (
             <button
@@ -232,35 +232,35 @@ export const Plans = () => {
         </div>
 
         <div className="card">
-          <div className="card-content border-b border-slate-200 space-y-4">
+          <div className="card-content border-b border-slate-200 dark:border-slate-700 space-y-4">
             <div>
               <label className="label text-sm">Activity Owner</label>
               <div className="relative" ref={ownerDropdownRef}>
                 <button
                   onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-left flex items-center justify-between bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-left flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <span className="text-slate-900">
+                  <span className="text-slate-900 dark:text-white">
                     {selectedOwnerIrId === 'all' ? 'All' : selectedOwner ? `${selectedOwner.name} (${selectedOwner.ir_id})` : 'Select owner'}
                   </span>
                   <ChevronDown size={18} className="text-slate-400" />
                 </button>
 
                 {showOwnerDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    <div className="sticky top-0 bg-white p-2 border-b border-slate-200">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 p-2 border-b border-slate-200 dark:border-slate-700">
                       <input
                         type="text"
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     {currentUser?.role === 'admin' && (
                       <button
                         onClick={() => handleOwnerSelect('all')}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 ${selectedOwnerIrId === 'all' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 ${selectedOwnerIrId === 'all' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                       >
                         All
                       </button>
@@ -269,14 +269,14 @@ export const Plans = () => {
                       <button
                         key={owner.ir_id}
                         onClick={() => handleOwnerSelect(owner.ir_id)}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 border-t border-slate-100 ${selectedOwnerIrId === owner.ir_id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-t border-slate-100 ${selectedOwnerIrId === owner.ir_id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                       >
                         <div className="font-medium">{owner.name}</div>
-                        <div className="text-xs text-slate-500">{owner.ir_id}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-500">{owner.ir_id}</div>
                       </button>
                     ))}
                     {filteredOwners.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-slate-500 text-center">No owners found</div>
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-500 text-center">No owners found</div>
                     )}
                   </div>
                 )}
@@ -308,22 +308,23 @@ export const Plans = () => {
             </div>
           ) : visiblePlans.length === 0 ? (
             <div className="card-content text-center py-12">
-              <p className="text-slate-600">No plans found</p>
+              <p className="text-slate-600 dark:text-slate-400">No plans found</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Prospect Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">UL1</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">UL2</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Quoted Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Expected UV</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">IR ID</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Prospect Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">UL1</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">UL2</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Quoted Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Expected UV</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Pipeline</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">IR ID</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -331,19 +332,20 @@ export const Plans = () => {
                       const invite = allInvites?.find((i) => i.id === plan.invite_id)
                       const info = allInfos?.find((i) => i.id === invite?.info_id)
                       return (
-                        <tr key={plan.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">{info?.prospect_name || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.ul1 || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.ul2 || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.quoted_amount || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.expected_uvs || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.status || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{plan.ir_id}</td>
+                        <tr key={plan.id} className="hover:bg-slate-50 dark:bg-slate-800">
+                          <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{info?.prospect_name || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.ul1 || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.ul2 || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.quoted_amount || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.expected_uvs || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.status || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.pipeline_status || 'tentative'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.ir_id}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
                                 onClick={() => setViewingPlan(plan)}
-                                className="p-2 hover:bg-slate-100 rounded text-slate-600"
+                                className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400"
                                 title="View plan"
                               >
                                 <Eye size={18} />
@@ -377,14 +379,14 @@ export const Plans = () => {
 
               {data && data.total > limit && (
                 <div className="card-footer flex items-center justify-between">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     Showing {(page - 1) * limit + 1} to {Math.min(page * limit, data.total)} of {data.total}
                   </span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -392,7 +394,7 @@ export const Plans = () => {
                     <button
                       onClick={() => setPage((p) => (data && p * limit < data.total ? p + 1 : p))}
                       disabled={!data || page * limit >= data.total}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -463,53 +465,57 @@ interface ViewPlanModalProps {
 const ViewPlanModal = ({ plan, info, onClose }: ViewPlanModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Plan Details</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Plan Details</h3>
         </div>
         <div className="card-content space-y-4">
           <div>
             <label className="label">Prospect Name</label>
-            <p className="text-slate-700">{info?.prospect_name || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{info?.prospect_name || 'NA'}</p>
           </div>
           <div>
             <label className="label">UL1</label>
-            <p className="text-slate-700">{plan.ul1 || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.ul1 || 'NA'}</p>
           </div>
           <div>
             <label className="label">UL2</label>
-            <p className="text-slate-700">{plan.ul2 || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.ul2 || 'NA'}</p>
           </div>
           <div>
             <label className="label">Quoted Amount</label>
-            <p className="text-slate-700">{plan.quoted_amount || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.quoted_amount || 'NA'}</p>
           </div>
           <div>
             <label className="label">Expected UV</label>
-            <p className="text-slate-700">{plan.expected_uvs || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.expected_uvs || 'NA'}</p>
           </div>
           <div>
             <label className="label">Status</label>
-            <p className="text-slate-700">{plan.status || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.status || 'NA'}</p>
+          </div>
+          <div>
+            <label className="label">Pipeline Status</label>
+            <p className="text-slate-700 dark:text-slate-300">{plan.pipeline_status || 'tentative'}</p>
           </div>
           <div>
             <label className="label">Remarks</label>
-            <p className="text-slate-700">{plan.remarks || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.remarks || 'NA'}</p>
           </div>
           <div>
             <label className="label">IR ID</label>
-            <p className="text-slate-700">{plan.ir_id}</p>
+            <p className="text-slate-700 dark:text-slate-300">{plan.ir_id}</p>
           </div>
           {plan.created_at && (
             <div>
               <label className="label">Created</label>
-              <p className="text-slate-700 text-sm">{new Date(plan.created_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(plan.created_at).toLocaleString()}</p>
             </div>
           )}
           {plan.updated_at && (
             <div>
               <label className="label">Updated</label>
-              <p className="text-slate-700 text-sm">{new Date(plan.updated_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(plan.updated_at).toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -547,6 +553,7 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
     expected_uvs: '',
     status: '',
     remarks: '',
+    pipeline_status: 'tentative',
   })
 
   useEffect(() => {
@@ -630,15 +637,16 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
       expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
       status: form.status,
       remarks: form.remarks || '',
+      pipeline_status: form.pipeline_status,
     }
     onSubmit(submitData)
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Create Plan</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Create Plan</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -649,23 +657,23 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                 <button
                   type="button"
                   onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-left flex items-center justify-between bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-left flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <span className="text-slate-900">
+                  <span className="text-slate-900 dark:text-white">
                     {selectedOwnerUser ? `${selectedOwnerUser.name}${selectedOwnerUser.id === currentUser?.id ? ' (Me)' : ''}` : 'Select owner'}
                   </span>
                   <ChevronDown size={18} className="text-slate-400" />
                 </button>
 
                 {showOwnerDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    <div className="sticky top-0 bg-white p-2 border-b border-slate-200">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 p-2 border-b border-slate-200 dark:border-slate-700">
                       <input
                         type="text"
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     {sortedOwners
@@ -675,17 +683,17 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                           key={owner.id}
                           type="button"
                           onClick={() => handleOwnerSelect(owner.id)}
-                          className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 border-t border-slate-100 ${selectedOwnerId === owner.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-t border-slate-100 ${selectedOwnerId === owner.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                         >
                           <div className="font-medium">
                             {owner.name}
                             {owner.id === currentUser?.id && ' (Me)'}
                           </div>
-                          <div className="text-xs text-slate-500">{owner.ir_id}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-500">{owner.ir_id}</div>
                         </button>
                       ))}
                     {sortedOwners.filter((u) => authorizingOwners.some((au) => au.id === u.id)).length === 0 && (
-                      <div className="px-3 py-2 text-sm text-slate-500 text-center">No owners found</div>
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-500 text-center">No owners found</div>
                     )}
                   </div>
                 )}
@@ -769,6 +777,20 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                   />
                 </div>
                 <div>
+                  <label className="label">Pipeline Status</label>
+                  <select
+                    value={form.pipeline_status}
+                    onChange={(e) => setForm({ ...form, pipeline_status: e.target.value })}
+                    className="input"
+                  >
+                    <option value="tentative">Tentative</option>
+                    <option value="strong">Strong</option>
+                    <option value="sureshot">Sureshot</option>
+                    <option value="done">Done</option>
+                    <option value="kiv">KIV</option>
+                  </select>
+                </div>
+                <div>
                   <label className="label">Remarks *</label>
                   <textarea
                     required
@@ -817,6 +839,7 @@ const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, curre
     expected_uvs: plan.expected_uvs?.toString() || '',
     status: plan.status,
     remarks: plan.remarks || '',
+    pipeline_status: plan.pipeline_status || 'tentative',
   })
 
   const isAdmin = currentUser?.role === 'admin'
@@ -830,15 +853,16 @@ const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, curre
       expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : undefined,
       status: form.status,
       remarks: form.remarks || undefined,
+      pipeline_status: form.pipeline_status,
     }
     onSubmit(submitData)
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Edit Plan</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Plan</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -893,6 +917,20 @@ const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, curre
               />
             </div>
             <div>
+              <label className="label">Pipeline Status</label>
+              <select
+                value={form.pipeline_status}
+                onChange={(e) => setForm({ ...form, pipeline_status: e.target.value })}
+                className="input"
+              >
+                <option value="tentative">Tentative</option>
+                <option value="strong">Strong</option>
+                <option value="sureshot">Sureshot</option>
+                <option value="done">Done</option>
+                <option value="kiv">KIV</option>
+              </select>
+            </div>
+            <div>
               <label className="label">Remarks</label>
               <textarea
                 value={form.remarks}
@@ -944,13 +982,13 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Plan</h3>
         </div>
         <div className="card-content space-y-4">
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Are you sure you want to delete plan for <strong>{info?.prospect_name}</strong>? This action cannot be undone.
           </p>
         </div>

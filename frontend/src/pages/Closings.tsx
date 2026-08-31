@@ -234,8 +234,8 @@ export const Closings = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">Closings</h2>
-            <p className="mt-1 text-slate-600">Manage prospect closings</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Closings</h2>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Manage prospect closings</p>
           </div>
           {canCreateClosing && (
             <button
@@ -249,35 +249,35 @@ export const Closings = () => {
         </div>
 
         <div className="card">
-          <div className="card-content border-b border-slate-200 space-y-4">
+          <div className="card-content border-b border-slate-200 dark:border-slate-700 space-y-4">
             <div>
               <label className="label text-sm">Activity Owner</label>
               <div className="relative" ref={ownerDropdownRef}>
                 <button
                   onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-left flex items-center justify-between bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-left flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <span className="text-slate-900">
+                  <span className="text-slate-900 dark:text-white">
                     {selectedOwnerIrId === 'all' ? 'All' : selectedOwner ? `${selectedOwner.name} (${selectedOwner.ir_id})` : 'Select owner'}
                   </span>
                   <ChevronDown size={18} className="text-slate-400" />
                 </button>
 
                 {showOwnerDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    <div className="sticky top-0 bg-white p-2 border-b border-slate-200">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 p-2 border-b border-slate-200 dark:border-slate-700">
                       <input
                         type="text"
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     {currentUser?.role === 'admin' && (
                       <button
                         onClick={() => handleOwnerSelect('all')}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 ${selectedOwnerIrId === 'all' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 ${selectedOwnerIrId === 'all' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                       >
                         All
                       </button>
@@ -286,14 +286,14 @@ export const Closings = () => {
                       <button
                         key={owner.ir_id}
                         onClick={() => handleOwnerSelect(owner.ir_id)}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 border-t border-slate-100 ${selectedOwnerIrId === owner.ir_id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-t border-slate-100 ${selectedOwnerIrId === owner.ir_id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                       >
                         <div className="font-medium">{owner.name}</div>
-                        <div className="text-xs text-slate-500">{owner.ir_id}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-500">{owner.ir_id}</div>
                       </button>
                     ))}
                     {filteredOwners.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-slate-500 text-center">No owners found</div>
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-500 text-center">No owners found</div>
                     )}
                   </div>
                 )}
@@ -325,20 +325,20 @@ export const Closings = () => {
             </div>
           ) : visibleClosings.length === 0 ? (
             <div className="card-content text-center py-12">
-              <p className="text-slate-600">No closings found</p>
+              <p className="text-slate-600 dark:text-slate-400">No closings found</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Prospect Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Closing Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Remarks</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">IR ID</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Prospect Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Closing Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Remarks</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">IR ID</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -347,17 +347,17 @@ export const Closings = () => {
                       const invite = allInvites?.find((i) => i.id === plan?.invite_id)
                       const info = allInfos?.find((i) => i.id === invite?.info_id)
                       return (
-                        <tr key={closing.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">{info?.prospect_name || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{closing.closing_date || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{closing.status || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{closing.remarks || 'NA'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{closing.ir_id}</td>
+                        <tr key={closing.id} className="hover:bg-slate-50 dark:bg-slate-800">
+                          <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{info?.prospect_name || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{closing.closing_date || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{closing.status || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{closing.remarks || 'NA'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{closing.ir_id}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
                                 onClick={() => setViewingClosing(closing)}
-                                className="p-2 hover:bg-slate-100 rounded text-slate-600"
+                                className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400"
                                 title="View closing"
                               >
                                 <Eye size={18} />
@@ -391,14 +391,14 @@ export const Closings = () => {
 
               {data && data.total > limit && (
                 <div className="card-footer flex items-center justify-between">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     Showing {(page - 1) * limit + 1} to {Math.min(page * limit, data.total)} of {data.total}
                   </span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -406,7 +406,7 @@ export const Closings = () => {
                     <button
                       onClick={() => setPage((p) => (data && p * limit < data.total ? p + 1 : p))}
                       disabled={!data || page * limit >= data.total}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -481,41 +481,41 @@ interface ViewClosingModalProps {
 const ViewClosingModal = ({ closing, info, onClose }: ViewClosingModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Closing Details</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Closing Details</h3>
         </div>
         <div className="card-content space-y-4">
           <div>
             <label className="label">Prospect Name</label>
-            <p className="text-slate-700">{info?.prospect_name || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{info?.prospect_name || 'NA'}</p>
           </div>
           <div>
             <label className="label">Closing Date</label>
-            <p className="text-slate-700">{closing.closing_date || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{closing.closing_date || 'NA'}</p>
           </div>
           <div>
             <label className="label">Status</label>
-            <p className="text-slate-700">{closing.status || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{closing.status || 'NA'}</p>
           </div>
           <div>
             <label className="label">Remarks</label>
-            <p className="text-slate-700">{closing.remarks || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{closing.remarks || 'NA'}</p>
           </div>
           <div>
             <label className="label">IR ID</label>
-            <p className="text-slate-700">{closing.ir_id}</p>
+            <p className="text-slate-700 dark:text-slate-300">{closing.ir_id}</p>
           </div>
           {closing.created_at && (
             <div>
               <label className="label">Created</label>
-              <p className="text-slate-700 text-sm">{new Date(closing.created_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(closing.created_at).toLocaleString()}</p>
             </div>
           )}
           {closing.updated_at && (
             <div>
               <label className="label">Updated</label>
-              <p className="text-slate-700 text-sm">{new Date(closing.updated_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(closing.updated_at).toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -634,9 +634,9 @@ const CreateClosingModal = ({ onClose, onSubmit, isLoading, error, users, plans,
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Create Closing</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Create Closing</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -647,23 +647,23 @@ const CreateClosingModal = ({ onClose, onSubmit, isLoading, error, users, plans,
                 <button
                   type="button"
                   onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-left flex items-center justify-between bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-left flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <span className="text-slate-900">
+                  <span className="text-slate-900 dark:text-white">
                     {selectedOwnerUser ? `${selectedOwnerUser.name}${selectedOwnerUser.id === currentUser?.id ? ' (Me)' : ''}` : 'Select owner'}
                   </span>
                   <ChevronDown size={18} className="text-slate-400" />
                 </button>
 
                 {showOwnerDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    <div className="sticky top-0 bg-white p-2 border-b border-slate-200">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 p-2 border-b border-slate-200 dark:border-slate-700">
                       <input
                         type="text"
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     {sortedOwners
@@ -673,17 +673,17 @@ const CreateClosingModal = ({ onClose, onSubmit, isLoading, error, users, plans,
                           key={owner.id}
                           type="button"
                           onClick={() => handleOwnerSelect(owner.id)}
-                          className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 border-t border-slate-100 ${selectedOwnerId === owner.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900'}`}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-t border-slate-100 ${selectedOwnerId === owner.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-slate-900 dark:text-white'}`}
                         >
                           <div className="font-medium">
                             {owner.name}
                             {owner.id === currentUser?.id && ' (Me)'}
                           </div>
-                          <div className="text-xs text-slate-500">{owner.ir_id}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-500">{owner.ir_id}</div>
                         </button>
                       ))}
                     {sortedOwners.filter((u) => authorizingOwners.some((au) => au.id === u.id)).length === 0 && (
-                      <div className="px-3 py-2 text-sm text-slate-500 text-center">No owners found</div>
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-500 text-center">No owners found</div>
                     )}
                   </div>
                 )}
@@ -796,9 +796,9 @@ const EditClosingModal = ({ closing, onClose, onSubmit, isLoading, error, users,
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Edit Closing</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Closing</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -877,13 +877,13 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Closing</h3>
         </div>
         <div className="card-content space-y-4">
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Are you sure you want to delete closing for <strong>{info?.prospect_name}</strong>? This action cannot be undone.
           </p>
         </div>

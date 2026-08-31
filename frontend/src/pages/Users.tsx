@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import type { User } from '../types/auth'
-import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 interface ListResponse {
   data: User[]
@@ -119,8 +119,8 @@ export const Users = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">Users</h2>
-            <p className="mt-1 text-slate-600">Manage users and permissions</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Users</h2>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Manage users and permissions</p>
           </div>
           {canCreateUser && (
             <button
@@ -134,7 +134,7 @@ export const Users = () => {
         </div>
 
         <div className="card">
-          <div className="card-content border-b border-slate-200">
+          <div className="card-content border-b border-slate-200 dark:border-slate-700">
             <div className="flex gap-2">
               <Search size={20} className="text-slate-400 flex-shrink-0 mt-1" />
               <input
@@ -160,39 +160,43 @@ export const Users = () => {
             </div>
           ) : visibleUsers.length === 0 ? (
             <div className="card-content text-center py-12">
-              <p className="text-slate-600">No users found</p>
+              <p className="text-slate-600 dark:text-slate-400">No users found</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">IR ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase">Status</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">IR ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Status</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Plans Shown</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">DRs Hit</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {visibleUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">{u.name}</td>
-                        <td className="px-6 py-4 text-sm text-slate-600">{u.email}</td>
-                        <td className="px-6 py-4 text-sm text-slate-600">{u.ir_id}</td>
+                      <tr key={u.id} className="hover:bg-slate-50 dark:bg-slate-800">
+                        <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{u.name}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{u.email}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{u.ir_id}</td>
                         <td className="px-6 py-4 text-sm">
                           <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 uppercase">
                             {u.role}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">{u.status || 'NA'}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{u.status || 'NA'}</td>
+                        <td className="px-6 py-4 text-center text-sm font-medium text-slate-900 dark:text-white">{u.plans_shown ?? 0}</td>
+                        <td className="px-6 py-4 text-center text-sm font-medium text-slate-900 dark:text-white">{u.drs_hit ?? 0}</td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => setViewingUser(u)}
-                              className="p-2 hover:bg-slate-100 rounded text-slate-600"
+                              className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400"
                               title="View user"
                             >
                               <Eye size={18} />
@@ -225,14 +229,14 @@ export const Users = () => {
 
               {data && data.total > limit && (
                 <div className="card-footer flex items-center justify-between">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     Showing {(page - 1) * limit + 1} to {Math.min(page * limit, data.total)} of {data.total}
                   </span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -240,7 +244,7 @@ export const Users = () => {
                     <button
                       onClick={() => setPage((p) => (data && p * limit < data.total ? p + 1 : p))}
                       disabled={!data || page * limit >= data.total}
-                      className="p-2 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -299,49 +303,59 @@ interface ViewUserModalProps {
 const ViewUserModal = ({ user, onClose }: ViewUserModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">User Details</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">User Details</h3>
         </div>
         <div className="card-content space-y-4">
           <div>
             <label className="label">Name</label>
-            <p className="text-slate-700">{user.name}</p>
+            <p className="text-slate-700 dark:text-slate-300">{user.name}</p>
           </div>
           <div>
             <label className="label">Email</label>
-            <p className="text-slate-700 break-all">{user.email}</p>
+            <p className="text-slate-700 dark:text-slate-300 break-all">{user.email}</p>
           </div>
           <div>
             <label className="label">IR ID</label>
-            <p className="text-slate-700">{user.ir_id}</p>
+            <p className="text-slate-700 dark:text-slate-300">{user.ir_id}</p>
           </div>
           <div>
             <label className="label">Phone</label>
-            <p className="text-slate-700">{user.phone}</p>
+            <p className="text-slate-700 dark:text-slate-300">{user.phone}</p>
           </div>
           <div>
             <label className="label">Role</label>
-            <p className="text-slate-700 uppercase">{user.role}</p>
+            <p className="text-slate-700 dark:text-slate-300 uppercase">{user.role}</p>
           </div>
           <div>
             <label className="label">Status</label>
-            <p className="text-slate-700">{user.status || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{user.status || 'NA'}</p>
           </div>
           <div>
             <label className="label">Upline ID</label>
-            <p className="text-slate-700">{user.upline_id || 'NA'}</p>
+            <p className="text-slate-700 dark:text-slate-300">{user.upline_id || 'NA'}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Plans Shown</label>
+              <p className="text-slate-700 dark:text-slate-300">{user.plans_shown ?? 0}</p>
+            </div>
+            <div>
+              <label className="label">DRs Hit</label>
+              <p className="text-slate-700 dark:text-slate-300">{user.drs_hit ?? 0}</p>
+            </div>
           </div>
           {user.created_at && (
             <div>
               <label className="label">Created</label>
-              <p className="text-slate-700 text-sm">{new Date(user.created_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(user.created_at).toLocaleString()}</p>
             </div>
           )}
           {user.updated_at && (
             <div>
               <label className="label">Updated</label>
-              <p className="text-slate-700 text-sm">{new Date(user.updated_at).toLocaleString()}</p>
+              <p className="text-slate-700 dark:text-slate-300 text-sm">{new Date(user.updated_at).toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -382,7 +396,11 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
     role: 'ir' as 'admin' | 'upline' | 'ir',
     upline_id: currentUser?.id || '',
     status: '',
+    password: '',
+    plans_shown: 0,
+    drs_hit: 0,
   })
+  const [showPassword, setShowPassword] = useState(false)
 
   const isAdmin = currentUser?.role === 'admin'
 
@@ -397,9 +415,9 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Create User</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Create User</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -474,10 +492,31 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
                   ))}
                 </select>
               ) : (
-                <div className="px-3 py-2 border border-slate-300 rounded text-slate-700 bg-slate-50">
+                <div className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800">
                   {currentUser?.name} ({currentUser?.ir_id})
                 </div>
               )}
+            </div>
+            <div>
+              <label className="label">Password (Optional)</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="input pr-10"
+                  placeholder="Leave blank to skip password setup"
+                />
+                {form.password && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               <label className="label">Status</label>
@@ -488,6 +527,28 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
                 className="input"
                 placeholder="Optional"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Plans Shown</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.plans_shown}
+                  onChange={(e) => setForm({ ...form, plans_shown: parseInt(e.target.value) || 0 })}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="label">DRs Hit</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.drs_hit}
+                  onChange={(e) => setForm({ ...form, drs_hit: parseInt(e.target.value) || 0 })}
+                  className="input"
+                />
+              </div>
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
@@ -531,7 +592,11 @@ const EditUserModal = ({ user, onClose, onSubmit, isLoading, error }: EditUserMo
     role: user.role as 'admin' | 'upline' | 'ir',
     upline_id: user.upline_id || '',
     status: user.status || '',
+    password: '',
+    plans_shown: user.plans_shown ?? 0,
+    drs_hit: user.drs_hit ?? 0,
   })
+  const [showPassword, setShowPassword] = useState(false)
 
   const isAdmin = currentUser?.role === 'admin'
 
@@ -546,9 +611,9 @@ const EditUserModal = ({ user, onClose, onSubmit, isLoading, error }: EditUserMo
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900">Edit User</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit User</h3>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
@@ -614,6 +679,27 @@ const EditUserModal = ({ user, onClose, onSubmit, isLoading, error }: EditUserMo
               </div>
             )}
             <div>
+              <label className="label">New Password (Optional)</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="input pr-10"
+                  placeholder="Leave blank to keep current password"
+                />
+                {form.password && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
               <label className="label">Status</label>
               <input
                 type="text"
@@ -621,6 +707,28 @@ const EditUserModal = ({ user, onClose, onSubmit, isLoading, error }: EditUserMo
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Plans Shown</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.plans_shown}
+                  onChange={(e) => setForm({ ...form, plans_shown: parseInt(e.target.value) || 0 })}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="label">DRs Hit</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.drs_hit}
+                  onChange={(e) => setForm({ ...form, drs_hit: parseInt(e.target.value) || 0 })}
+                  className="input"
+                />
+              </div>
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
@@ -651,7 +759,7 @@ const DeleteConfirmModal = ({ user, onCancel, onConfirm, isLoading, error }: Del
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete User</h3>
         </div>
@@ -668,7 +776,7 @@ const DeleteConfirmModal = ({ user, onCancel, onConfirm, isLoading, error }: Del
             </div>
           )}
           {!isSelfDelete && currentUser?.role === 'admin' && (
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-400">
               Are you sure you want to delete <strong>{user.name}</strong>? Their downlines will be re-parented to their upline. This action cannot be undone.
             </p>
           )}

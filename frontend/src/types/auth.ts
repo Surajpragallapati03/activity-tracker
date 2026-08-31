@@ -7,6 +7,10 @@ export interface User {
   role: 'admin' | 'upline' | 'ir'
   status: string
   upline_id: string | null
+  plans_shown?: number
+  drs_hit?: number
+  password_hash?: string | null
+  picture_url?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -46,6 +50,7 @@ export interface Plan {
   quoted_amount: string
   expected_uvs: number
   status: string
+  pipeline_status?: string
   remarks?: string | null
   created_at?: string
   updated_at?: string

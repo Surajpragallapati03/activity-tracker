@@ -11,6 +11,7 @@ import (
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/config"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/repository"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -80,6 +81,36 @@ func (s *AuthService) HandleCallback(ctx context.Context, code string) (*models.
 
 	if user == nil {
 		return nil, nil, fmt.Errorf("user not found")
+	}
+
+	if claims.Picture != "" {
+		user.PictureURL = &claims.Picture
+	}
+
+	tokens, err := s.tokenService.GenerateTokens(user.ID, user.Email, user.Role)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	return user, tokens, nil
+}
+
+func (s *AuthService) LoginWithPassword(ctx context.Context, irID, password string) (*models.User, *Tokens, error) {
+	user, err := s.userRepository.GetByIRID(ctx, irID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to lookup user: %w", err)
+	}
+
+	if user == nil || user.PasswordHash == nil {
+		return nil, nil, fmt.Errorf("invalid credentials")
+	}
+
+	if !utils.VerifyPassword(*user.PasswordHash, password) {
+		return nil, nil, fmt.Errorf("invalid credentials")
+	}
+
+	if user.Status != "active" {
+		return nil, nil, fmt.Errorf("inactive user")
 	}
 
 	tokens, err := s.tokenService.GenerateTokens(user.ID, user.Email, user.Role)
