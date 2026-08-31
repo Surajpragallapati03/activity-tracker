@@ -302,26 +302,26 @@ export const Reports = () => {
     <div className="mt-6">
       <h4 className="font-semibold text-slate-900 dark:text-white mb-3">{title}</h4>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm text-slate-900 dark:text-slate-300">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-              <th className="px-4 py-2 text-left font-semibold">Sl. No.</th>
-              <th className="px-4 py-2 text-left font-semibold">IR Name</th>
-              <th className="px-4 py-2 text-left font-semibold">Prospect Name</th>
-              <th className="px-4 py-2 text-right font-semibold">Expected UVs</th>
-              <th className="px-4 py-2 text-left font-semibold">Remarks</th>
+              <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-200">Sl. No.</th>
+              <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-200">IR Name</th>
+              <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-200">Prospect Name</th>
+              <th className="px-4 py-2 text-right font-semibold text-slate-900 dark:text-slate-200">Expected UVs</th>
+              <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-200">Remarks</th>
             </tr>
           </thead>
           <tbody>
             {details.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-2 text-center text-slate-500 dark:text-slate-500">
+                <td colSpan={5} className="px-4 py-2 text-center text-slate-500 dark:text-slate-400">
                   No data
                 </td>
               </tr>
             ) : (
               details.map((detail, idx) => (
-                <tr key={idx} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800">
+                <tr key={idx} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700">
                   <td className="px-4 py-2">{detail.sl_no}</td>
                   <td className="px-4 py-2">{detail.ir_name}</td>
                   <td className="px-4 py-2">{detail.prospect_name}</td>
@@ -383,7 +383,7 @@ export const Reports = () => {
               <select
                 value={datePreset}
                 onChange={(e) => setDatePreset(e.target.value as any)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
@@ -399,7 +399,7 @@ export const Reports = () => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -410,7 +410,7 @@ export const Reports = () => {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -421,7 +421,7 @@ export const Reports = () => {
                 <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Choose a user...</option>
                   {accessibleUsers.map((user) => (
@@ -434,9 +434,9 @@ export const Reports = () => {
             ) : (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select Verticals</label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg p-3">
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-3">
                   {accessibleUsers.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-500">No users available</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No users available</p>
                   ) : (
                     accessibleUsers.map((user) => (
                       <label key={user.id} className="flex items-center gap-2 cursor-pointer">
@@ -444,7 +444,7 @@ export const Reports = () => {
                           type="checkbox"
                           checked={selectedVerticals.includes(user.ir_id)}
                           onChange={() => toggleVertical(user.ir_id)}
-                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600"
+                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-500 accent-blue-600"
                         />
                         <span className="text-sm text-slate-700 dark:text-slate-300">{user.name} ({user.ir_id})</span>
                       </label>
@@ -456,7 +456,7 @@ export const Reports = () => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -487,7 +487,7 @@ export const Reports = () => {
                 {startDate} to {endDate}
               </p>
               {exportError && (
-                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                <div className="mt-3 p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
                   {exportError}
                 </div>
               )}
@@ -554,7 +554,7 @@ export const Reports = () => {
                 <ExportButtons onExport={handleExportTeam} />
               </div>
               {exportError && (
-                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                <div className="mt-3 p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
                   {exportError}
                 </div>
               )}
