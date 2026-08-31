@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	DatabaseURL          string
 	DBHost               string
 	DBPort               string
 	DBUser               string
@@ -38,6 +39,7 @@ func Load() (*Config, error) {
 	refreshExpiry, _ := time.ParseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h"))
 
 	cfg := &Config{
+		DatabaseURL:         getEnv("DATABASE_URL", ""),
 		DBHost:               getEnv("DB_HOST", "localhost"),
 		DBPort:               getEnv("DB_PORT", "5432"),
 		DBUser:               getEnv("DB_USER", "postgres"),
@@ -63,7 +65,10 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-func (c *Config) DatabaseURL() string {
+func (c *Config) GetDatabaseURL() string {
+	if c.DatabaseURL != "" {
+		return c.DatabaseURL
+	}
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		c.DBUser,
 		c.DBPassword,

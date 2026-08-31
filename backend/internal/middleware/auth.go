@@ -5,14 +5,15 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/config"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/repository"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
 )
 
-func CORS() gin.HandlerFunc {
+func CORS(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", cfg.FrontendURL)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
