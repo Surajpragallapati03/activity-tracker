@@ -18,6 +18,7 @@ func SetupAuthRoutes(r *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 	authGroup := r.Group("/auth")
 	{
 		authGroup.GET("/login", authHandler.Login)
+		authGroup.POST("/login", authHandler.LoginPassword)
 		authGroup.GET("/callback", authHandler.Callback)
 		authGroup.POST("/refresh", authHandler.Refresh)
 	}

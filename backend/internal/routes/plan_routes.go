@@ -11,7 +11,8 @@ import (
 func SetupPlanRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.AuthorizationService) {
 	inviteRepo := repository.NewInviteRepository(db)
 	planRepo := repository.NewPlanRepository(db)
-	planService := services.NewPlanService(planRepo, inviteRepo)
+	userRepo := repository.NewUserRepository(db)
+	planService := services.NewPlanService(planRepo, inviteRepo, userRepo)
 	handler := handlers.NewPlanHandler(planService, authzService)
 
 	plans := r.Group("/plans")

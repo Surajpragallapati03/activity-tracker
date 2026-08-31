@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/repository"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/utils"
 )
 
 type UserService struct {
@@ -49,6 +50,14 @@ func (s *UserService) CreateUser(ctx context.Context, req *models.CreateUserRequ
 		Role:     req.Role,
 		UplineID: req.UplineID,
 		Status:   req.Status,
+	}
+
+	if req.Password != "" {
+		hash, err := utils.HashPassword(req.Password)
+		if err != nil {
+			return nil, err
+		}
+		user.PasswordHash = &hash
 	}
 
 	err := s.repo.Create(ctx, user)
@@ -100,6 +109,14 @@ func (s *UserService) CreateUserWithPromotion(ctx context.Context, creator *mode
 		Status:   req.Status,
 	}
 
+	if req.Password != "" {
+		hash, err := utils.HashPassword(req.Password)
+		if err != nil {
+			return nil, err
+		}
+		user.PasswordHash = &hash
+	}
+
 	err := s.repo.Create(ctx, user)
 	if err != nil {
 		return nil, err
@@ -140,6 +157,14 @@ func (s *UserService) UpdateUser(ctx context.Context, id uuid.UUID, req *models.
 		if upline == nil {
 			return nil, fmt.Errorf("upline user not found")
 		}
+	}
+
+	if req.Password != "" {
+		hash, err := utils.HashPassword(req.Password)
+		if err != nil {
+			return nil, err
+		}
+		req.Password = hash
 	}
 
 	err := s.repo.Update(ctx, id, req)

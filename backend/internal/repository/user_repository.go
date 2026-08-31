@@ -21,8 +21,8 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (ir_id, name, email, phone, role, upline_id, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (ir_id, name, email, phone, role, upline_id, status, password_hash, plans_shown, drs_hit)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -34,6 +34,9 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 		user.Role,
 		user.UplineID,
 		user.Status,
+		user.PasswordHash,
+		user.PlansShown,
+		user.DrsHit,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 
 	return err
@@ -41,7 +44,7 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	query := `
-		SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at
+		SELECT id, ir_id, name, email, phone, role, upline_id, status, password_hash, plans_shown, drs_hit, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -56,6 +59,9 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 		&user.Role,
 		&user.UplineID,
 		&user.Status,
+		&user.PasswordHash,
+		&user.PlansShown,
+		&user.DrsHit,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -72,7 +78,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
-		SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at
+		SELECT id, ir_id, name, email, phone, role, upline_id, status, password_hash, plans_shown, drs_hit, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -87,6 +93,9 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		&user.Role,
 		&user.UplineID,
 		&user.Status,
+		&user.PasswordHash,
+		&user.PlansShown,
+		&user.DrsHit,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -103,7 +112,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 func (r *UserRepository) GetByIRID(ctx context.Context, irID string) (*models.User, error) {
 	query := `
-		SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at
+		SELECT id, ir_id, name, email, phone, role, upline_id, status, password_hash, plans_shown, drs_hit, created_at, updated_at
 		FROM users
 		WHERE ir_id = $1
 	`
@@ -118,6 +127,9 @@ func (r *UserRepository) GetByIRID(ctx context.Context, irID string) (*models.Us
 		&user.Role,
 		&user.UplineID,
 		&user.Status,
+		&user.PasswordHash,
+		&user.PlansShown,
+		&user.DrsHit,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -141,8 +153,11 @@ func (r *UserRepository) Update(ctx context.Context, id uuid.UUID, updates *mode
 		    role = COALESCE($4, role),
 		    upline_id = CASE WHEN $5::uuid IS NOT NULL THEN $5::uuid ELSE upline_id END,
 		    status = COALESCE($6, status),
+		    password_hash = COALESCE($7, password_hash),
+		    plans_shown = COALESCE($8, plans_shown),
+		    drs_hit = COALESCE($9, drs_hit),
 		    updated_at = now()
-		WHERE id = $7
+		WHERE id = $10
 	`
 
 	cmdTag, err := r.db.Exec(ctx, query,
@@ -152,6 +167,9 @@ func (r *UserRepository) Update(ctx context.Context, id uuid.UUID, updates *mode
 		emptyStringToNull(updates.Role),
 		updates.UplineID,
 		emptyStringToNull(updates.Status),
+		emptyStringToNull(updates.Password),
+		updates.PlansShown,
+		updates.DrsHit,
 		id,
 	)
 
@@ -271,7 +289,7 @@ func (r *UserRepository) List(ctx context.Context, query *models.ListUsersQuery)
 	}
 
 	offset := (query.Page - 1) * query.Limit
-	sqlQuery := fmt.Sprintf("SELECT id, ir_id, name, email, phone, role, upline_id, status, created_at, updated_at FROM users %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", whereClause, argNum, argNum+1)
+	sqlQuery := fmt.Sprintf("SELECT id, ir_id, name, email, phone, role, upline_id, status, password_hash, plans_shown, drs_hit, created_at, updated_at FROM users %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", whereClause, argNum, argNum+1)
 	listArgs := append(args, query.Limit, offset)
 
 	rows, err := r.db.Query(ctx, sqlQuery, listArgs...)
@@ -292,6 +310,9 @@ func (r *UserRepository) List(ctx context.Context, query *models.ListUsersQuery)
 			&user.Role,
 			&user.UplineID,
 			&user.Status,
+			&user.PasswordHash,
+			&user.PlansShown,
+			&user.DrsHit,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)

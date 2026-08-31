@@ -1,469 +1,916 @@
-# Activity Tracker - Project Status
 
-Last Updated: 2026-08-25
+
+## Project Overview
+
+Internal activity tracker for a team of fewer than 50 users.
+
+### Stack
+
+- Backend: Go 1.24 + Gin
+- Database: PostgreSQL
+- Migrations: golang-migrate
+- Authentication: Google OAuth + IR ID/password
+- Authorization: JWT
+- Frontend: React + TypeScript + Vite
+- Styling: Tailwind CSS
+- Data fetching: TanStack Query
+- Local development: Docker Compose
+- Production database: Neon PostgreSQL
 
 ---
 
 # Architecture
 
-Frontend
-↓
-API Client
-↓
-Backend
-↓
-Authentication
-↓
-Authorization
-↓
-Services
-↓
+```text
+React Frontend
+      ↓
+Axios API Client
+      ↓
+Go / Gin
+      ↓
+Service
+      ↓
 Repository
-↓
+      ↓
 PostgreSQL
+````
+
+Keep the existing architecture simple.
+
+Do not introduce unnecessary abstractions.
 
 ---
 
-# Infrastructure ✅
+# Roles & Authorization
 
-- [x] Go project setup
-- [x] React + Vite setup
-- [x] PostgreSQL setup
-- [x] Docker Compose setup
-- [x] Makefile
-- [x] GitHub setup
-- [x] Automatic database migrations
-- [x] Startup logging
-- [x] Default admin seeding from environment variables
+Supported roles:
 
----
-
-# Database ✅
-
-- [x] Users table
-- [x] Infos table
-- [x] Invites table
-- [x] Plans table
-- [x] Closings table
-- [x] FG Invites table
-- [x] Feel Goods table
-- [x] Database migrations
-- [x] Automatic migration execution
-
----
-
-# Business Modules
-
-## Users ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Validation
-- [x] Unique IR ID
-- [x] Unique phone
-- [x] Role/status validation
-- [x] Default admin seeding
-- [x] Hierarchy-based access
-- [x] User creation by all authenticated users
-- [x] IR promotion to Upline
-- [x] Self profile editing
-- [x] Admin-only deletion
-- [x] Hierarchy-safe deletion with reparenting
-- [x] 20 users per page
-
----
-
-## Infos ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Partial updates
-- [x] Response validation: A, AB, B, BC, C
-- [x] Status as free text
-- [x] Activity owner filtering
-- [x] Hierarchy-aware owner selection
-- [x] 20 items per page
-
----
-
-## Invites ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Partial updates
-- [x] Date/time validation
-- [x] Activity owner filtering
-- [x] Owner-first create flow
-- [x] Owner-specific Info filtering
-- [x] Logged-in user shown first as "(Me)"
-- [x] Meeting time converted to HH:MM:SS
-- [x] Meeting time displayed
-- [x] Remarks displayed
-- [x] Hierarchy-aware filtering
-
----
-
-## Plans ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Partial updates
-- [x] Activity owner filtering
-- [x] Owner-first create flow
-- [x] Owner-specific Invite filtering
-- [x] Logged-in user shown first as "(Me)"
-- [x] Correct invite_id mapping
-- [x] Correct expected_uvs mapping
-- [x] Remarks mapping
-- [x] Prospect name resolution: Plan → Invite → Info
-- [x] Hierarchy-aware authorization
-- [x] 20 items per page
-
----
-
-## Closings ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Partial updates
-- [x] Activity owner filtering
-- [x] Owner-first create flow
-- [x] Owner-specific Plan filtering
-- [x] Logged-in user shown first as "(Me)"
-- [x] Create Closing
-- [x] View Closing
-- [x] Edit Closing
-- [x] Delete Closing
-- [x] Prospect name resolution: Closing → Plan → Invite → Info
-- [x] Hierarchy-aware authorization
-- [x] Responsive UI
-- [x] Loading/error/empty states
-- [x] 20 items per page
-
----
-
-## FG Invites ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Activity owner filtering
-- [x] Owner-first create flow
-- [x] Owner-specific Closing filtering
-- [x] Logged-in user shown first as "(Me)"
-- [x] Create FG Invite
-- [x] View FG Invite
-- [x] Edit FG Invite
-- [x] Delete FG Invite
-- [x] Authorization-aware actions
-- [x] Prospect name resolution
-- [x] Meeting date/time display
-- [x] Meeting time converted to HH:MM:SS
-- [x] Remarks display
-- [x] Loading/error/empty states
-- [x] Responsive UI
-- [x] 20 items per page
-
----
-
-## Feel Good / KIV ✅
-
-- [x] CRUD
-- [x] Search
-- [x] Pagination
-- [x] Activity owner filtering
-- [x] Owner-first create flow
-- [x] Owner-specific FG Invite filtering
-- [x] Logged-in user shown first as "(Me)"
-- [x] Create Feel Good / KIV
-- [x] View Feel Good / KIV
-- [x] Edit Feel Good / KIV
-- [x] Delete Feel Good / KIV
-- [x] UL1 mandatory
-- [x] UL2 mandatory
-- [x] Status handling
-- [x] Remarks handling
-- [x] Hard delete
-- [x] Authorization-aware actions
-- [x] Prospect name resolution
-- [x] Loading/error/empty states
-- [x] Responsive UI
-- [x] 20 items per page
-
----
-
-# Business Flow ✅
-
-Info
-↓
-Invite
-↓
-Plan
-↓
-Closing
-↓
-FG Invite
-↓
-Feel Good / KIV
-
----
-
-# Authentication ✅
-
-## Default Admin
-
-- [x] Environment configuration
-- [x] Automatic admin seeding
-- [x] Idempotent admin creation
-
-## Google OAuth
-
-- [x] OAuth configuration
-- [x] Login endpoint
-- [x] OAuth callback
-- [x] Google identity verification
-- [x] Existing-user lookup
-- [x] Unknown-user rejection
-- [x] OAuth state validation
-- [x] Browser OAuth flow
-- [x] Backend → frontend redirect
-- [x] End-to-end browser authentication
-
-## JWT
-
-- [x] Access token generation
-- [x] Refresh token generation
-- [x] Access token expiry
-- [x] Refresh token expiry
-- [x] Access token validation
-- [x] Refresh token validation
-- [x] Separate access/refresh secrets
-- [x] Token type validation
-- [x] POST /auth/refresh
-
-## JWT Middleware
-
-- [x] Bearer token extraction
-- [x] Access token validation
-- [x] Token type validation
-- [x] User lookup
-- [x] Current user in Gin context
-- [x] Protected business routes
-- [x] Public health endpoint
-- [x] Public authentication endpoints
-
----
-
-# Authorization ✅
+* admin
+* upline
+* ir
 
 ## Admin
 
-- [x] Full access to users
-- [x] Full access to activities
-- [x] Create activities for any user
-- [x] Edit any user's activities
-- [x] Delete any user's activities
+* Full system access.
+* Manage all users.
+* View and manage all activities.
+* Generate individual reports.
+* Generate team reports.
+* Export reports.
 
-## Upline / IR
+## Upline
 
-- [x] Access own activities
-- [x] Access direct downline activities
-- [x] Access indirect downline activities
-- [x] Create downline activities
-- [x] Edit downline activities
-- [x] Delete downline activities
+* View self and direct/indirect descendants.
+* Manage authorized activities.
+* Generate reports for self and authorized descendants.
+* Generate team reports from authorized hierarchy.
+* Export authorized reports.
 
-## Hierarchy
+## IR
 
-- [x] users.upline_id as hierarchy source
-- [x] Direct downline lookup
-- [x] Indirect downline lookup
-- [x] Recursive hierarchy traversal
-- [x] Hierarchy-based activity access
-- [x] Hierarchy-based activity creation
-- [x] Hierarchy-based activity editing
-- [x] Hierarchy-based activity deletion
-- [x] IR can have downlines
-- [x] IR can be promoted to Upline
-- [x] Reparenting when admin deletes an Upline
+* View own data only.
+* Manage own activities.
+* Generate own individual report.
+* Cannot access another user's data.
+
+Backend authorization is the source of truth.
+
+---
+
+# Authentication
+
+Implemented:
+
+* Google OAuth
+* IR ID + password login
+* JWT access token
+* JWT refresh token
+* bcrypt password hashing
+* Set password
+* Change password
+* Password visibility toggle
+* Active-user validation
+
+Existing Google-only users can have a NULL password hash.
+
+Migration:
+
+```text
+000008_add_password_hash_to_users
+```
+
+Password hashes are never returned by APIs.
+
+---
+
+# User Management
+
+Implemented:
+
+* User creation
+* User editing
+* User deletion
+* Search
+* Pagination
+* Hierarchy management
+* Role management
+* Activity owner filtering
+* Password setup
+* User metrics
+
+## User Metrics
+
+Fields:
+
+* `plans_shown`
+* `drs_hit`
+
+Migration:
+
+```text
+000009_add_user_metrics
+```
+
+### plans_shown
+
+* Automatically increments after successful Plan creation.
+* Does not increment when editing a Plan.
+* Can be manually edited.
+
+### drs_hit
+
+* Manually editable.
+* Can be entered during user creation.
+* Can be updated later.
+
+## User Deletion
+
+* Only Admin can delete users.
+* Users cannot delete themselves.
+* Downlines are not deleted.
+* Direct children are re-parented to the deleted user's upline.
+* Deletion/re-parenting is transactional.
+
+---
+
+# Dashboard
+
+Implemented:
+
+* System Count
+* Plans Shown
+* DRs Hit
+* Account Information
+* Profile editing
+* User menu
+* Set/Change Password
+* Logout
+
+## Editable Profile Fields
+
+* Name
+* Email
+* Phone
+* Status
+
+## Read-only Profile Fields
+
+* IR ID
+* Role
+
+Password management remains separate from normal profile editing.
+
+---
+
+# Navigation
+
+Implemented:
+
+* Responsive sidebar
+* Desktop collapse/expand
+* Mobile drawer
+* Sidebar state persistence
+* Activity section collapse/expand
+
+Current navigation:
+
+```text
+Dashboard
+Users
+Infos
+Pipeline Updates
+KIV
+Reports
+
+Activities
+├── Invites
+├── Plans
+├── Closings
+├── FG Invites
+└── Feel Goods
+```
+
+---
+
+# Activity Workflow
+
+```text
+Info
+  ↓
+Invite
+  ↓
+Plan
+  ↓
+Closing
+  ↓
+FG Invite
+  ↓
+Feel Good
+```
+
+KIV is maintained separately from the active pipeline.
+
+---
+
+# Activity Modules
+
+## Infos
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Authorization
+* Responsive UI
+
+## Invites
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Owner-first creation
+* Owner-based Info filtering
+* Authorization
+* Meeting time conversion
+
+Creation flow:
+
+```text
+Activity Owner
+      ↓
+Owner's Infos
+      ↓
+Invite
+```
+
+## Plans
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Owner-first creation
+* Eligible Invite filtering
+* Expected UVs
+* Pipeline Status
+* Prospect resolution
+* Authorization
+
+Creation flow:
+
+```text
+Activity Owner
+      ↓
+Eligible Invite
+      ↓
+Plan
+```
+
+Plans Shown increments after successful Plan creation.
+
+## Closings
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Authorization
+* Prospect resolution
+
+## FG Invites
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Authorization
+* Meeting date/time
+* Mode
+* Prospect resolution
+
+## Feel Goods
+
+Implemented:
+
+* CRUD
+* Search
+* Pagination
+* Activity owner filtering
+* Authorization
+* Hard delete
+* UL1
+* UL2
+* Status
+* Remarks
+
+---
+
+# Plan Pipeline
+
+Migration:
+
+```text
+000010_add_pipeline_status_to_plans
+```
+
+Supported statuses:
+
+```text
+tentative
+strong
+sureshot
+done
+KIV
+```
+
+## Meaning
+
+* `tentative`: Prospect is still tentative.
+* `strong`: Prospect is arranging funds.
+* `sureshot`: Prospect is ready with funds.
+* `done`: Prospect is outside the active pipeline.
+* `KIV`: Keep in View / tracking.
+
+## Pipeline Rules
+
+Active pipeline:
+
+* tentative
+* strong
+* sureshot
+
+Normal metrics:
+
+* done
+* KIV
+
+Pipeline UV uses:
+
+```text
+plans.expected_uvs
+```
+
+Done and KIV do not contribute to active pipeline UV totals.
+
+All pipeline statuses are editable.
+
+New Plans default to:
+
+```text
+tentative
+```
+
+---
+
+# Pipeline Updates
+
+Route:
+
+```text
+/pipeline-updates
+```
+
+Implemented:
+
+* Hierarchy-aware user selection
+* Current user shown first as `(Me)`
+* Tentative summary
+* Strong summary
+* Sureshot summary
+* UV totals
+* Plan counts
+* Pipeline details
+* Date filtering
+* Pagination
+* Authorization
+
+Pipeline detail format:
+
+```text
+Sl.No | IR Name | Prospect Name | Expected UVs | Remarks
+```
+
+Only tentative, strong and sureshot appear as active pipeline sections.
+
+---
+
+# KIV
+
+Route:
+
+```text
+/kiv
+```
+
+KIV is individual-user-specific.
+
+Rules:
+
+* Shows only the logged-in user's KIV plans.
+* Does not include descendants.
+* Supports pagination.
+* Pipeline status can be edited.
+* Changing status removes the Plan from KIV automatically.
+
+---
+
+# Reports
+
+Route:
+
+```text
+/reports
+```
+
+Modes:
+
+* Individual
+* Team
+
+## Individual Reports
+
+Supports:
+
+* User selection
+* Today
+* This Week
+* This Month
+* Custom date range
+* Activity counts
+* Done count
+* KIV count
+* Pipeline UV totals
+* Pipeline details
+
+Activity metrics:
+
+```text
+Infos
+Invites
+Plans
+Closings
+FG Invites
+Feel Goods
+Done
+KIV
+```
+
+Pipeline metrics:
+
+```text
+Tentative UV
+Strong UV
+Sureshot UV
+Total Pipeline UV
+```
+
+Pipeline detail:
+
+```text
+Sl.No | IR Name | Prospect Name | Expected UVs | Remarks
+```
+
+Individual reports contain only the selected user's own data.
+
+---
+
+# Team Reports
+
+A team means:
+
+```text
+Selected User
++
+All Descendants
+```
+
+User-facing terminology:
+
+```text
+<Name>'s Team
+```
+
+Do not use "Vertical" or "Sub-Team" in user-facing reports.
+
+## Example
+
+```text
+Upline 1's Team
+
+Upline 1
+├── Upline 2
+│   ├── IR1
+│   ├── IR2
+│   └── IR3
+└── Upline 3
+    ├── IR4
+    ├── IR5
+    └── IR6
+```
+
+## Multiple Team Selection
+
+Multiple teams can be selected.
+
+If selected users have a parent/descendant relationship, overlapping teams are deduplicated.
+
+Example:
+
+```text
+Selected:
+Upline 1
+Upline 2
+Upline 3
+```
+
+If Upline 2 and Upline 3 are descendants of Upline 1, the overall aggregation belongs to:
+
+```text
+Upline 1's Team
+```
+
+The same activities and pipeline UVs must not be counted twice.
+
+Independent teams remain separate.
+
+Example:
+
+```text
+Upline 2's Team
+Upline 3's Team
+```
+
+if neither contains the other.
+
+---
+
+# Report Data Rules
+
+For pipeline details:
+
+```text
+IR Name       = users.name
+IR ID         = users.ir_id
+Prospect Name = infos.prospect_name
+Expected UVs  = plans.expected_uvs
+Remarks       = plans.remarks
+```
+
+Important:
+
+* `users.name` must be displayed as IR Name.
+* `users.ir_id` must be displayed as IR ID.
+* `users.id` UUID must never be displayed as IR ID.
+
+---
+
+# Report Export
+
+Implemented:
+
+* Excel
+* CSV
+* PDF
+
+Endpoints:
+
+```text
+POST /reports/individual/export/:format
+POST /reports/team/export/:format
+```
+
+Supported formats:
+
+```text
+excel
+csv
+pdf
+```
+
+Exports use the same authorized report data.
+
+## Excel
+
+Individual:
+
+* Summary sheet
+* Pipeline Details sheet
+
+Team:
+
+* Team Summary sheet
+* Pipeline Details sheet
+
+## CSV
+
+Includes:
+
+* Report summary
+* Activity metrics
+* Pipeline metrics
+* Pipeline details
+
+Proper CSV escaping is required.
+
+## PDF
+
+Implemented using a real PDF generator.
+
+PDF includes:
+
+* Report metadata
+* Activity summary
+* Pipeline summary
+* Pipeline details
+* Team sections
+
+PDF must be valid and open in standard PDF readers.
+
+---
+
+# Report Validation & Fixes
+
+Completed:
+
+* Fixed blank Reports page caused by NULL Go slices.
+* Fixed report authorization for Upline descendants.
+* Fixed Reports authentication/API calls.
+* Fixed user and team selectors.
+* Fixed report rendering.
+* Fixed PDF generation.
+* Fixed UUID being displayed instead of IR ID.
+* Fixed IR Name being displayed as IR ID.
+* Fixed overlapping team aggregation.
+* Fixed duplicate team activity counts.
+* Fixed duplicate pipeline data.
+* Updated team terminology to `<Name>'s Team`.
+* Added Excel export.
+* Added CSV export.
+* Added PDF export.
+* Fixed Reports dark-mode visibility.
+
+---
+
+# Frontend Theme
+
+Implemented:
+
+* Light mode
+* Dark mode
+* System theme support
+* Theme persistence
+* Tailwind dark mode
+* Dark-mode styling across application
+
+Reports page received additional dark-mode fixes for:
+
+* Date fields
+* Select controls
+* Team selectors
+* Error messages
+* Tables
+* Checkboxes
+* Summary blocks
+* Pipeline sections
+
+---
+
+# Google Profile
+
+Implemented:
+
+* Google profile image support.
+* Profile image in user interface.
+* Initials fallback for users without an image.
+* No unnecessary profile image persistence.
+
+Google profile image is not required for IR ID/password authentication.
+
+---
+
+# Dashboard Visual Enhancement
+
+Implemented:
+
+* Enhanced metric cards.
+* System Count card.
+* Plans Shown card.
+* DRs Hit card.
+* Icons.
+* Improved spacing and hierarchy.
+* Improved Account Information presentation.
+* Responsive dashboard layout.
+
+---
+
+# Database Migrations
+
+Important migrations:
+
+```text
+000008_add_password_hash_to_users
+000009_add_user_metrics
+000010_add_pipeline_status_to_plans
+```
+
+Rules:
+
+* Never modify an existing migration.
+* Always create a new migration for schema changes.
+* Every new migration must have up/down files.
+* Do not add migrations unless required.
+
+---
+
+# Core Business Rules
+
+## User Hierarchy
+
+`users.upline_id` is the source of truth.
+
+```text
+Admin
+  ↓
+Upline
+  ↓
+Upline / IR
+```
+
+Users can have direct and indirect descendants.
 
 ## Activity Ownership
 
-- [x] ir_id represents activity owner
-- [x] Logged-in user does not replace ir_id
-- [x] Admin can create for another IR
-- [x] Upline can manage downline activities
-- [x] IR can manage own activities
-- [x] No created_by / updated_by fields
+Activities use `ir_id` to identify the owner.
+
+Backend authorization must enforce ownership and hierarchy access.
+
+## Prospect Flow
+
+```text
+Info
+→ Invite
+→ Plan
+→ Closing
+→ FG Invite
+→ Feel Good
+```
+
+## Pipeline
+
+Active:
+
+```text
+tentative
+strong
+sureshot
+```
+
+Normal tracking:
+
+```text
+done
+KIV
+```
+
+## KIV
+
+KIV is individual-user-specific.
+
+Descendants are not included.
+
+## User Metrics
+
+`plans_shown`:
+
+* Automatically increments after successful Plan creation.
+* Does not increment on Plan update.
+* Can be manually edited.
+
+`drs_hit`:
+
+* Manually editable.
 
 ---
 
-# Frontend UI Foundation ✅
+# Current Module Status
 
-- [x] Tailwind CSS
-- [x] Responsive layout
-- [x] Header
-- [x] Sidebar
-- [x] Collapsible sidebar
-- [x] Mobile navigation drawer
-- [x] Expand/collapse Activities section
-- [x] Sidebar state persistence
-- [x] Responsive content width
-- [x] Login page
-- [x] Dashboard layout
-- [x] Reusable UI components
-
----
-
-# Frontend Authentication ✅
-
-- [x] Auth TypeScript models
-- [x] AuthContext
-- [x] useAuth hook
-- [x] Google login
-- [x] OAuth callback handling
-- [x] Access token handling
-- [x] Refresh token handling
-- [x] Axios Bearer token interceptor
-- [x] Automatic token refresh
-- [x] Request queue during token refresh
-- [x] Logout
-- [x] Auth state persistence
-- [x] Protected routes
-- [x] End-to-end browser authentication
+```text
+Authentication             COMPLETE
+Google OAuth                COMPLETE
+IR ID + Password            COMPLETE
+Password Management         COMPLETE
+User Management             COMPLETE
+User Hierarchy              COMPLETE
+User Metrics                COMPLETE
+Dashboard                   COMPLETE
+Collapsible Sidebar         COMPLETE
+Light/Dark Mode             COMPLETE
+Google Profile Image        COMPLETE
+Infos                       COMPLETE
+Invites                     COMPLETE
+Plans                       COMPLETE
+Plan Pipeline Status        COMPLETE
+Closings                    COMPLETE
+FG Invites                  COMPLETE
+Feel Goods                  COMPLETE
+Pipeline Updates            COMPLETE
+KIV                         COMPLETE
+Individual Reports          COMPLETE
+Team Reports                COMPLETE
+Excel Export                COMPLETE
+CSV Export                  COMPLETE
+PDF Export                  COMPLETE
+```
 
 ---
 
-# Frontend Authorization ✅
+# Remaining Roadmap
 
-- [x] Admin UI permissions
-- [x] Upline UI permissions
-- [x] IR UI permissions
-- [x] Hide unauthorized actions
-- [x] Activity ownership handling
-- [x] Protected navigation
-- [x] Activity owner selector
-- [x] Hierarchy-aware owner filtering
+## 1. Final Application Testing
 
----
+* [ ] Full end-to-end testing
+* [ ] Admin workflow testing
+* [ ] Upline workflow testing
+* [ ] IR workflow testing
+* [ ] Mobile testing
+* [ ] Dark/light mode regression testing
+* [ ] Report/export regression testing
+* [ ] Authorization/security testing
+* [ ] Database migration verification
 
-# Frontend Pages
+## 2. Production Deployment
 
-- [x] Login
-- [x] Dashboard
-- [x] Users
-- [x] Infos
-- [x] Invites
-- [x] Plans
-- [x] Closings
-- [x] FG Invites
-- [x] Feel Goods
-
----
-
-# Local Development Documentation ✅
-
-- [x] Complete local setup instructions in README.md
-- [x] Prerequisites documented
-- [x] Environment variables documented
-- [x] Database setup documented
-- [x] Migration/startup flow documented
-- [x] Backend startup documented
-- [x] Frontend startup documented
-- [x] Google OAuth local setup documented
-- [x] JWT configuration documented
-- [x] Default admin setup documented
-- [x] Local testing flow documented
-- [x] Troubleshooting documented
+* [ ] Production backend deployment
+* [ ] Production frontend deployment
+* [ ] Neon production database
+* [ ] Production Google OAuth configuration
+* [ ] Production environment variables
+* [ ] Production JWT secrets
+* [ ] Production domain configuration
+* [ ] Production smoke testing
 
 ---
 
-# Deployment
+# Project Status
 
-## Local
+Core application functionality: COMPLETE
 
-- [x] Environment configuration
-- [x] OAuth testing
-- [x] JWT testing
-- [x] JWT middleware testing
-- [x] Authorization testing
-- [x] CORS testing
-- [x] Frontend authentication testing
-- [x] Users testing
-- [x] Infos testing
-- [x] Invites testing
-- [x] Plans testing
-- [x] Closings testing
-- [x] FG Invites testing
-- [x] Feel Goods testing
+Authentication: COMPLETE
 
-## Production
+User hierarchy: COMPLETE
 
-- [ ] Neon database
-- [ ] Backend deployment
-- [ ] Frontend deployment
-- [ ] Production OAuth redirect URI
-- [ ] Production environment variables
-- [ ] Production JWT secrets
-- [ ] Production authentication testing
-- [ ] Production authorization testing
-- [ ] Production CORS configuration
+Activity tracking: COMPLETE
 
----
+Pipeline tracking: COMPLETE
 
-# Current Milestone
+KIV tracking: COMPLETE
 
-**Local Development Setup & Documentation**
+Individual reports: COMPLETE
 
-Goal:
+Team reports: COMPLETE
 
-Document the complete process for a new developer to clone the repository, configure the environment, start PostgreSQL, run migrations, start the backend, start the frontend, configure Google OAuth, and access the application locally.
+Report exports: COMPLETE
 
-After this milestone:
+Light/Dark mode: COMPLETE
 
-**Next milestone: Email + Password Authentication**
+Google profile image: COMPLETE
 
-- Keep Google OAuth.
-- Add email/password login.
-- Reuse existing JWT authentication.
-- Do not introduce a separate authorization mechanism.
+Current priority:
 
----
+```text
+Final Testing
+      ↓
+Production Deployment
+```
 
-# Future Milestones
-
-1. Local development documentation
-2. Email + password authentication
-3. Full frontend regression testing
-4. Production deployment
-5. Production authentication testing
-6. Production authorization testing
-
----
-
-# Notes
-
-- Empty files are not considered complete.
-- Mark tasks complete only after implementation and testing.
-- Never regenerate completed modules.
-- Follow CLAUDE.md.
-- Keep implementation simple.
-- Avoid over-engineering.
-- Do not add audit fields unless explicitly requested.
-- Do not change activity ownership rules.
-- ir_id always represents the activity owner.
-- users.upline_id is the source of truth for hierarchy.
-- Use hard delete.
-- Never modify existing migrations.
-- Always create new migrations.
-- Frontend activity modules should follow the established patterns.
-- Use 20 items per page.
-- Activity owner selector should show the logged-in user first as "(Me)".
-- Owner selection should filter activities by ir_id.
-- Backend remains the security boundary.
-- Frontend permissions are for UX; backend authorization must enforce access.

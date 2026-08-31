@@ -11,6 +11,7 @@ import (
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/services"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/utils"
 )
 
 type UserHandler struct {
@@ -250,6 +251,94 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
+}
+
+type SetPasswordRequest struct {
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	user := GetCurrentUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing current_password or new_password"})
+		return
+	}
+
+	if user.PasswordHash == nil || *user.PasswordHash == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user does not have a password"})
+		return
+	}
+
+	if !utils.VerifyPassword(*user.PasswordHash, req.CurrentPassword) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "current password is incorrect"})
+		return
+	}
+
+	hash, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		return
+	}
+
+	updateReq := &models.UpdateUserRequest{
+		Password: hash,
+	}
+
+	_, err = h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated"})
+}
+
+func (h *UserHandler) SetPassword(c *gin.Context) {
+	user := GetCurrentUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req SetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing new_password"})
+		return
+	}
+
+	if user.PasswordHash != nil && *user.PasswordHash != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user already has a password"})
+		return
+	}
+
+	hash, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		return
+	}
+
+	updateReq := &models.UpdateUserRequest{
+		Password: hash,
+	}
+
+	_, err = h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to set password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password set"})
 }
 
 func buildDownlineMap(userID uuid.UUID, allUsers []models.User, downlineMap map[uuid.UUID]bool) {

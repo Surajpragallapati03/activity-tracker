@@ -9,6 +9,7 @@ import (
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/config"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/repository"
+	"github.com/Surajpragallapati03/activity-tracker/backend/internal/utils"
 )
 
 func SeedDefaultAdmin(ctx context.Context, db *pgxpool.Pool, cfg *config.Config) error {
@@ -38,6 +39,14 @@ func SeedDefaultAdmin(ctx context.Context, db *pgxpool.Pool, cfg *config.Config)
 		Phone:  cfg.DefaultAdminPhone,
 		Role:   "admin",
 		Status: "active",
+	}
+
+	if cfg.DefaultAdminPassword != "" {
+		hash, err := utils.HashPassword(cfg.DefaultAdminPassword)
+		if err != nil {
+			return err
+		}
+		user.PasswordHash = &hash
 	}
 
 	if err := userRepo.Create(ctx, user); err != nil {

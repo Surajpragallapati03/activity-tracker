@@ -1,511 +1,368 @@
 # CLAUDE.md
 
-# Activity Tracker
+## Activity Tracker
 
 Internal activity tracker for a team of fewer than 50 users.
 
----
+## Core Principles
 
-# Core Principles
+* Build production-ready code only.
+* Keep implementation simple and readable.
+* Minimize token usage.
+* Read `PROJECT_STATUS.md` before implementing anything.
+* Modify existing files whenever possible.
+* Do not regenerate completed modules.
+* Implement only the requested milestone.
+* Do not add unrelated features.
+* Follow the existing project structure and naming conventions.
+* Do not introduce libraries unless explicitly required.
+* Run the appropriate build after changes.
 
-- Generate production-ready code only.
-- Keep responses concise.
-- Minimize token usage.
-- Modify existing files whenever possible.
-- Generate only the requested module.
-- Do not generate unrelated features.
-- Do not explain code unless explicitly asked.
-- Prefer simple solutions over overengineering.
-- Follow the existing project structure.
+## Architecture
 
----
+Backend flow:
 
-# Simplicity Rules
+`Route → Handler → Service → Repository → PostgreSQL`
 
-Maximum users: 50.
+Frontend flow:
 
-Prefer explicit code over abstractions.
+`Page → API Client → Backend API`
 
-Avoid:
+Keep handlers thin, services focused on business logic, and repositories focused on database access.
 
-- interfaces unless absolutely necessary
-- generic repositories
-- factory patterns
-- CQRS
-- event-driven architecture
-- microservices
-- DTOs unless required
-- premature optimization
-- unnecessary helper packages
+Avoid unnecessary abstractions such as:
 
-Do not create folders, layers, or abstractions unless explicitly requested.
+* Generic repositories
+* CQRS
+* Event-driven architecture
+* Microservices
+* Factories
+* Unnecessary interfaces
+* Unnecessary DTOs
+* Premature optimization
+* Extra layers or folders
 
-Keep functions small and readable.
+## Tech Stack
 
----
+### Backend
 
-# Tech Stack
+* Go 1.24
+* Gin
+* PostgreSQL
+* golang-migrate
+* JWT
+* Google OAuth
 
-## Backend
+### Frontend
 
-- Go 1.24
-- Gin
-- PostgreSQL
-- golang-migrate
-- JWT Authentication
-- Google OAuth
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* React Router
+* TanStack Query
+* TanStack Table
+* Axios
+* shadcn/ui
 
-## Frontend
+### Infrastructure
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- TanStack Query
-- TanStack Table
-- Axios
-- shadcn/ui
+* Docker Compose
+* Neon PostgreSQL for production
 
-## Infrastructure
-
-- Docker Compose (local development)
-- Neon PostgreSQL (production)
-
----
-
-# Project Structure
-
-```text
-activity-tracker/
-
-├── backend/
-│   ├── cmd/
-│   │   └── server/
-│   │       └── main.go
-│   │
-│   ├── internal/
-│   │   ├── config/
-│   │   ├── database/
-│   │   ├── handlers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── repository/
-│   │   ├── routes/
-│   │   └── services/
-│   │
-│   ├── migrations/
-│   ├── .env
-│   └── Makefile
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── types/
-│   │
-│   ├── package.json
-│   └── vite.config.ts
-│
-├── docker-compose.yml
-├── CLAUDE.md
-└── PROJECT_STATUS.md
-```
-
-Always follow the existing folder structure.
-
-Do not create new folders unless explicitly asked.
-
----
-
-# Roles
+## Roles
 
 Allowed roles:
 
-```text
-admin
-upline
-ir
-```
+* `admin`
+* `upline`
+* `ir`
 
----
+Use these terms:
 
-# Permissions
+* Admin
+* Upline
+* Independent Distributor
+* IR
+* Downline
 
-## Admin
+Do not use:
 
-- Full access
-- Create, edit and delete anything
-- View all activities
-- Manage all users
+* Employee
+* Manager
+* Member
 
-## Upline
+## Authorization
 
-- View own data
-- View direct downlines
-- Create activities for direct downlines
-- Edit direct downline activities
+Hierarchy source:
 
-## IR
+`users.upline_id`
 
-- View own data only
-- Create own activities
-- Edit own activities
+### Admin
 
----
+* Full access to users and activities.
+* Can create, edit, and delete any activity.
+* Only Admin can delete users.
+* Admin cannot delete themselves.
 
-# Terminology
+### Upline
 
-Never use:
+* Can access own data.
+* Can access direct and indirect downlines.
+* Can create and manage activities for authorized users.
 
-- Employee
-- Employees
-- Manager
-- Managers
-- Member
-- Members
+### IR
 
-Always use:
+* Can access own data.
+* Can access direct and indirect downlines.
+* Can create and manage activities for authorized users.
+* An IR can have downlines.
+* An IR can be promoted to Upline without changing relationships.
 
-- Admin
-- Upline
-- Independent Distributor
-- IR
-- Downline
+Unauthorized access must return HTTP 403.
 
----
+Authentication failures must return HTTP 401 where applicable.
 
-# Business Flow
+## Activity Ownership
 
-```text
-Info
-    ↓
-Invite
-    ↓
-Plan
-    ↓
-Closing
-    ↓
-FG Invite (optional)
-    ↓
-Feel Good / KIV
-```
+`activity.ir_id` always represents the actual activity owner.
 
----
+The logged-in user's ID must not replace the activity owner's `ir_id`.
 
-# Database Rules
+## Business Flow
 
-- Use UUID as the primary key.
-- Never modify existing migrations.
-- Always create new migrations.
-- One prospect belongs to exactly one IR.
-- One prospect can have only one invite.
-- One prospect can have only one plan.
-- One prospect can have only one closing.
-- One prospect can have only one FG invite.
-- One prospect can have only one feel-good entry.
-- Phone numbers must be globally unique.
-- Use hard delete for activities.
-- Restrict user deletion.
+`Info → Invite → Plan → Closing → FG Invite → Feel Good`
 
----
+## Plan Pipeline
 
-# Tables
+Allowed `pipeline_status` values:
 
-## users
+* `tentative`
+* `strong`
+* `sureshot`
+* `kiv`
+* `done`
 
-```text
-id
-ir_id
-name
-email
-phone
-role
-upline_id
-status
-created_at
-updated_at
-```
+New Plans default to `tentative`.
 
-## infos
+All five statuses are editable.
 
-```text
-id
-ir_id
-prospect_name
-phone
-response
-status
-remarks
-entry_date
-created_at
-updated_at
-```
+Only these are active pipeline categories:
 
-## invites
+* Tentative
+* Strong
+* Sureshot
 
-```text
-id
-info_id
-ir_id
-meeting_date
-meeting_time
-mode
-status
-remarks
-created_at
-updated_at
-```
+KIV and Done are normal metrics, not pipeline categories.
 
-## plans
+Pipeline calculations use `plans.expected_uvs`.
 
-```text
-id
-info_id
-ir_id
-ul1
-ul2
-quoted_amount
-expected_uv
-status
-remarks
-created_at
-updated_at
-```
+Pipeline remarks come from `plans.remarks`.
 
-## closings
+Do not create a separate pipeline table unless explicitly requested.
 
-```text
-id
-info_id
-ir_id
-status
-remarks
-created_at
-updated_at
-```
+## Database Rules
 
-## fg_invites
+* Use UUID primary keys.
+* Never modify existing migrations.
+* Always create a new migration for schema changes.
+* Use hard delete for activities.
+* Preserve existing relationships.
+* Do not add `created_by` or `updated_by` fields unless explicitly requested.
+* Do not change existing activity ownership rules.
 
-```text
-id
-info_id
-ir_id
-meeting_date
-meeting_time
-mode
-status
-remarks
-created_at
-updated_at
-```
+For schema changes, create both:
 
-## feel_goods
+`XXXX_description.up.sql`
 
-```text
-id
-info_id
-ir_id
-ul1
-ul2
-status
-remarks
-created_at
-updated_at
-```
+`XXXX_description.down.sql`
 
----
+## Authentication
 
-# Backend Architecture
+Supported authentication:
 
-```text
-Route
-   ↓
-Handler
-   ↓
-Service
-   ↓
-Repository
-   ↓
-PostgreSQL
-```
+* Google OAuth
+* IR ID + password
 
----
+JWT:
 
-# Backend Rules
+* Access token
+* Refresh token
 
-- Keep handlers thin.
-- Keep services focused on business logic.
-- Keep repositories focused on database access.
-- Validate requests.
-- Use transactions only when necessary.
-- Prefer simple SQL queries.
-- Avoid unnecessary abstractions.
-- Use context.Context where needed.
+Password requirements:
 
----
+* Store only bcrypt hashes.
+* Never store plaintext passwords.
+* Never return `password_hash`.
+* Existing Google-only users may have a NULL password hash.
 
-# API Standards
+Protected APIs require:
 
-Every list API must support:
+`Authorization: Bearer <access_token>`
 
-- pagination
-- search
-- filtering
-- sorting
+Do not modify authentication when implementing unrelated features.
 
-Examples:
-
-```text
-GET /infos?page=1&limit=20
-
-GET /infos?search=john
-
-GET /infos?ir_id=123
-
-GET /plans?status=completed
-```
-
----
-
-# Authentication
-
-- Google OAuth
-- JWT access token
-- JWT refresh token
-
-Protected APIs must use:
-
-```text
-Authorization: Bearer <token>
-```
-
----
-
-# Frontend Rules
-
-Build mobile-first.
+## Frontend
 
 The application must support:
 
-- Desktop
-- Tablet
-- Mobile
+* Desktop
+* Tablet
+* Mobile
+* Light mode
+* Dark mode
 
-Never use fixed widths.
+Use responsive layouts and avoid unnecessary fixed widths.
 
-Always use responsive layouts.
+Existing sidebar behavior:
 
----
+* Desktop collapsible sidebar.
+* Activities section can expand/collapse.
+* Mobile drawer.
+* Sidebar state persists locally.
 
-# Layout Rules
+Reuse existing UI patterns across modules.
 
-## Desktop
+## Pagination
 
-- Fixed sidebar
-- Full-width tables
-- Filters visible
+Default frontend page size:
 
-## Tablet
+`20`
 
-- Collapsible sidebar
-- Horizontal scrolling
-- Responsive forms
+Use backend pagination for large datasets.
 
-## Mobile
+List pages should support pagination, search, and filtering where applicable.
 
-- Drawer navigation
-- Card layout instead of tables
-- Stacked forms
+## Reporting
 
----
+Reports are based on existing activity data.
 
-# Dashboard Layout
+### Individual Report
 
-```text
-Sidebar
-    ├── Dashboard
-    ├── IRs
-    ├── Infos
-    ├── Invites
-    ├── Plans
-    ├── Closings
-    ├── FG Invites
-    └── Feel Goods
-```
+Supports:
 
----
+* Daily
+* Weekly
+* Monthly
+* Custom date range
 
-# Table Rules
+Shows activity counts:
 
-Every table must support:
+* Infos
+* Invites
+* Plans
+* Done
+* Closings
+* FG Invites
+* Feel Goods
+* KIV
 
-- search
-- sorting
-- filters
-- pagination
-- create
-- edit
-- delete
+Pipeline summary contains only:
 
-Show all business columns.
+* Tentative UV
+* Strong UV
+* Sureshot UV
 
-If activity does not exist:
+Pipeline details:
 
-```text
-NA
-```
+* Sl. No.
+* IR Name
+* Prospect Name
+* Expected UVs
+* Remarks
 
----
+### Team Report
 
-# Code Generation Rules
+* Uses the existing hierarchy.
+* Supports custom reporting verticals.
+* A selected vertical represents the selected user plus all descendants.
+* Prevent overlapping verticals.
+* Includes team activity counts and pipeline aggregation.
+* Downloadable as Excel (`.xlsx`).
 
-Generate only the files explicitly requested.
+## User Metrics
 
-Prefer modifying existing files over creating new files.
+Users have:
 
-Do not create:
+* Plans Shown
+* DRs Hit
 
-- interfaces
-- DTOs
-- generic repositories
-- helper packages
-- constants packages
-- tests
-- analytics
-- reports
-- charts
-- pipelines
-- notifications
+`plans_shown` may be incremented when a Plan is successfully created for that user.
 
-unless explicitly requested.
+The counter must belong to the Plan owner, not necessarily the logged-in user.
 
----
+`drs_hit` remains manually editable unless explicitly defined otherwise.
 
-# Response Format
+## Project Structure
+
+Use the existing structure:
+
+`backend/internal/config`
+
+`backend/internal/database`
+
+`backend/internal/handlers`
+
+`backend/internal/middleware`
+
+`backend/internal/models`
+
+`backend/internal/repository`
+
+`backend/internal/routes`
+
+`backend/internal/services`
+
+`frontend/src/components`
+
+`frontend/src/hooks`
+
+`frontend/src/layouts`
+
+`frontend/src/pages`
+
+`frontend/src/services`
+
+`frontend/src/types`
+
+Do not create new folders unless required.
+
+## Implementation Process
+
+Before coding:
+
+1. Read `CLAUDE.md`.
+2. Read `PROJECT_STATUS.md`.
+3. Inspect only files relevant to the requested milestone.
+4. Reuse existing implementations and patterns.
+5. Implement only the requested feature.
+6. Do not rewrite working unrelated code.
+7. Run the appropriate build.
+8. Report changed files and build status.
+
+If functionality is partially implemented, inspect and complete the existing implementation instead of rebuilding it.
+
+## Code Generation
+
+* Prefer modifying existing files.
+* Do not regenerate unchanged files.
+* Do not add unrelated features.
+* Do not add libraries unless necessary.
+* Keep functions small and readable.
+* Avoid unnecessary comments.
+* Prefer simple SQL.
+* Use transactions only when necessary.
+
+## Response Format
+
+Keep responses concise.
 
 Return:
 
-1. File path
-2. Code
+1. Changed files
+2. Implementation summary
+3. Build/test status
 
-Do not regenerate unchanged files.
+Do not return unchanged files.
 
-Do not explain architecture decisions.
-
-Keep explanations under 10 lines.
-
-Prefer diffs over full file replacements.
-
-Minimize output tokens.
-
-Avoid unnecessary comments.
-
-Follow existing naming conventions.
-
-Do not introduce additional libraries unless explicitly requested.
+Do not provide long architecture explanations unless explicitly requested.

@@ -21,4 +21,10 @@ func SetupUserRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.Aut
 		users.PUT("/:id", handler.UpdateUser)
 		users.DELETE("/:id", handler.DeleteUser)
 	}
+
+	profile := r.Group("/profile")
+	{
+		profile.POST("/change-password", handler.ChangePassword)
+		profile.POST("/set-password", handler.SetPassword)
+	}
 }

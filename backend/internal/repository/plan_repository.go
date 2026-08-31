@@ -21,8 +21,8 @@ func NewPlanRepository(db *pgxpool.Pool) *PlanRepository {
 
 func (r *PlanRepository) Create(ctx context.Context, plan *models.Plan) error {
 	query := `
-		INSERT INTO plans (invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO plans (invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, pipeline_status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -35,6 +35,7 @@ func (r *PlanRepository) Create(ctx context.Context, plan *models.Plan) error {
 		plan.ExpectedUVs,
 		plan.Status,
 		plan.Remarks,
+		plan.PipelineStatus,
 	).Scan(&plan.ID, &plan.CreatedAt, &plan.UpdatedAt)
 
 	return err
@@ -42,7 +43,7 @@ func (r *PlanRepository) Create(ctx context.Context, plan *models.Plan) error {
 
 func (r *PlanRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Plan, error) {
 	query := `
-		SELECT id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, created_at, updated_at
+		SELECT id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, pipeline_status, created_at, updated_at
 		FROM plans
 		WHERE id = $1
 	`
@@ -58,6 +59,7 @@ func (r *PlanRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Pla
 		&plan.ExpectedUVs,
 		&plan.Status,
 		&plan.Remarks,
+		&plan.PipelineStatus,
 		&plan.CreatedAt,
 		&plan.UpdatedAt,
 	)
@@ -81,8 +83,9 @@ func (r *PlanRepository) Update(ctx context.Context, id uuid.UUID, updates *mode
 		    expected_uvs = COALESCE($4, expected_uvs),
 		    status = COALESCE($5, status),
 		    remarks = COALESCE($6, remarks),
+		    pipeline_status = COALESCE($7, pipeline_status),
 		    updated_at = now()
-		WHERE id = $7
+		WHERE id = $8
 	`
 
 	cmdTag, err := r.db.Exec(ctx, query,
@@ -92,6 +95,7 @@ func (r *PlanRepository) Update(ctx context.Context, id uuid.UUID, updates *mode
 		updates.ExpectedUVs,
 		updates.Status,
 		updates.Remarks,
+		updates.PipelineStatus,
 		id,
 	)
 
@@ -138,6 +142,24 @@ func (r *PlanRepository) List(ctx context.Context, query *models.ListPlansQuery)
 		argNum++
 	}
 
+	if query.PipelineStatus != "" {
+		whereClause += fmt.Sprintf(" AND pipeline_status = $%d", argNum)
+		args = append(args, query.PipelineStatus)
+		argNum++
+	}
+
+	if query.StartDate != "" {
+		whereClause += fmt.Sprintf(" AND created_at >= $%d", argNum)
+		args = append(args, query.StartDate)
+		argNum++
+	}
+
+	if query.EndDate != "" {
+		whereClause += fmt.Sprintf(" AND created_at < $%d", argNum)
+		args = append(args, query.EndDate)
+		argNum++
+	}
+
 	countQuery := "SELECT COUNT(*) FROM plans " + whereClause
 	var total int64
 	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
@@ -146,7 +168,7 @@ func (r *PlanRepository) List(ctx context.Context, query *models.ListPlansQuery)
 	}
 
 	offset := (query.Page - 1) * query.Limit
-	sqlQuery := fmt.Sprintf("SELECT id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, created_at, updated_at FROM plans %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", whereClause, argNum, argNum+1)
+	sqlQuery := fmt.Sprintf("SELECT id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, pipeline_status, created_at, updated_at FROM plans %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", whereClause, argNum, argNum+1)
 	listArgs := append(args, query.Limit, offset)
 
 	rows, err := r.db.Query(ctx, sqlQuery, listArgs...)
@@ -168,6 +190,7 @@ func (r *PlanRepository) List(ctx context.Context, query *models.ListPlansQuery)
 			&plan.ExpectedUVs,
 			&plan.Status,
 			&plan.Remarks,
+			&plan.PipelineStatus,
 			&plan.CreatedAt,
 			&plan.UpdatedAt,
 		)

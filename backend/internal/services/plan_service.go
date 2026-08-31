@@ -13,10 +13,11 @@ import (
 type PlanService struct {
 	repo       *repository.PlanRepository
 	inviteRepo *repository.InviteRepository
+	userRepo   *repository.UserRepository
 }
 
-func NewPlanService(repo *repository.PlanRepository, inviteRepo *repository.InviteRepository) *PlanService {
-	return &PlanService{repo: repo, inviteRepo: inviteRepo}
+func NewPlanService(repo *repository.PlanRepository, inviteRepo *repository.InviteRepository, userRepo *repository.UserRepository) *PlanService {
+	return &PlanService{repo: repo, inviteRepo: inviteRepo, userRepo: userRepo}
 }
 
 func (s *PlanService) CreatePlan(ctx context.Context, req *models.CreatePlanRequest) (*models.Plan, error) {
@@ -33,20 +34,42 @@ func (s *PlanService) CreatePlan(ctx context.Context, req *models.CreatePlanRequ
 		return nil, fmt.Errorf("invite not found")
 	}
 
+	pipelineStatus := req.PipelineStatus
+	if pipelineStatus == "" {
+		pipelineStatus = "tentative"
+	}
+
 	plan := &models.Plan{
-		InviteID:     inviteID,
-		IRID:         req.IRID,
-		UL1:          req.UL1,
-		UL2:          req.UL2,
-		QuotedAmount: req.QuotedAmount,
-		ExpectedUVs:  req.ExpectedUVs,
-		Status:       req.Status,
-		Remarks:      req.Remarks,
+		InviteID:       inviteID,
+		IRID:           req.IRID,
+		UL1:            req.UL1,
+		UL2:            req.UL2,
+		QuotedAmount:   req.QuotedAmount,
+		ExpectedUVs:    req.ExpectedUVs,
+		Status:         req.Status,
+		Remarks:        req.Remarks,
+		PipelineStatus: pipelineStatus,
 	}
 
 	err = s.repo.Create(ctx, plan)
 	if err != nil {
 		return nil, err
+	}
+
+	// Increment plans_shown for the plan owner
+	user, err := s.userRepo.GetByIRID(ctx, req.IRID)
+	if err != nil {
+		return nil, err
+	}
+	if user != nil {
+		newPlansShown := user.PlansShown + 1
+		updateReq := &models.UpdateUserRequest{
+			PlansShown: &newPlansShown,
+		}
+		err = s.userRepo.Update(ctx, user.ID, updateReq)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return plan, nil

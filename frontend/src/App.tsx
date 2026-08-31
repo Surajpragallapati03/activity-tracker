@@ -8,6 +8,9 @@ import { Plans } from './pages/Plans'
 import { Closings } from './pages/Closings'
 import { FGInvites } from './pages/FGInvites'
 import { FeelGoods } from './pages/FeelGoods'
+import { PipelineUpdates } from './pages/PipelineUpdates'
+import { KIV } from './pages/KIV'
+import { Reports } from './pages/Reports'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useOAuthCallback } from './hooks/useOAuthCallback'
@@ -96,6 +99,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <FeelGoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pipeline-updates"
+        element={
+          <ProtectedRoute>
+            <PipelineUpdates />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kiv"
+        element={
+          <ProtectedRoute>
+            <KIV />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
           </ProtectedRoute>
         }
       />
