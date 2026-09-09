@@ -8,6 +8,7 @@ import { Plans } from './pages/Plans'
 import { Closings } from './pages/Closings'
 import { FGInvites } from './pages/FGInvites'
 import { FeelGoods } from './pages/FeelGoods'
+import { DailyUpdates } from './pages/DailyUpdates'
 import { PipelineUpdates } from './pages/PipelineUpdates'
 import { KIV } from './pages/KIV'
 import { Reports } from './pages/Reports'
@@ -99,6 +100,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <FeelGoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/daily-updates"
+        element={
+          <ProtectedRoute>
+            <DailyUpdates />
           </ProtectedRoute>
         }
       />

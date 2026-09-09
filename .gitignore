@@ -16,3 +16,13 @@ backend/.local.env
 
 # Local config files
 *.local.env
+
+.venv/
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
+
+# SDD - Spec Driven Development
+.mempalace/
+__pycache__/
