@@ -201,9 +201,9 @@ func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, acti
 		return errors.New("missing or invalid status")
 	}
 
-	response, _ := data["response"].(*string)
-	phone, _ := data["phone"].(*string)
-	remarks, _ := data["remarks"].(*string)
+	response := extractOptionalString(data, "response")
+	phone := extractOptionalString(data, "phone")
+	remarks := extractOptionalString(data, "remarks")
 
 	id := uuid.New()
 	query := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
@@ -346,8 +346,8 @@ func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, ac
 		}
 	}
 
-	mode, _ := data["mode"].(*string)
-	remarks, _ := data["remarks"].(*string)
+	mode := extractOptionalString(data, "mode")
+	remarks := extractOptionalString(data, "remarks")
 
 	// Get ir_id from the info record
 	var irID string
@@ -678,7 +678,7 @@ func (s *DailyUpdateService) createClosingInTx(ctx context.Context, tx pgx.Tx, a
 		return fmt.Errorf("cannot get ir_id from plan: %w", err)
 	}
 
-	remarks, _ := data["remarks"].(*string)
+	remarks := extractOptionalString(data, "remarks")
 
 	id := uuid.New()
 	query := `INSERT INTO closings (id, plan_id, ir_id, closing_date, status, remarks, created_at, updated_at)
@@ -813,8 +813,8 @@ func (s *DailyUpdateService) createFGInviteInTx(ctx context.Context, tx pgx.Tx, 
 		return fmt.Errorf("cannot get ir_id from closing: %w", err)
 	}
 
-	mode, _ := data["mode"].(*string)
-	remarks, _ := data["remarks"].(*string)
+	mode := extractOptionalString(data, "mode")
+	remarks := extractOptionalString(data, "remarks")
 
 	id := uuid.New()
 	query := `INSERT INTO fg_invites (id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at)
@@ -958,7 +958,7 @@ func (s *DailyUpdateService) createFeelGoodInTx(ctx context.Context, tx pgx.Tx, 
 		return fmt.Errorf("cannot get ir_id from fg_invite: %w", err)
 	}
 
-	remarks, _ := data["remarks"].(*string)
+	remarks := extractOptionalString(data, "remarks")
 
 	id := uuid.New()
 	query := `INSERT INTO feel_goods (id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at)
@@ -1043,4 +1043,13 @@ func buildUpdateClause(clauses []string) string {
 		result += clause
 	}
 	return result
+}
+
+func extractOptionalString(data map[string]interface{}, key string) *string {
+	if val, ok := data[key]; ok {
+		if strVal, ok := val.(string); ok && strVal != "" {
+			return &strVal
+		}
+	}
+	return nil
 }

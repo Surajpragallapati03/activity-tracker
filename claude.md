@@ -339,6 +339,7 @@ Before coding:
 6. Do not rewrite working unrelated code.
 7. Run the appropriate build.
 8. Report changed files and build status.
+9. Never commit or push the code.
 
 If functionality is partially implemented, inspect and complete the existing implementation instead of rebuilding it.
 

@@ -108,18 +108,22 @@ export const DailyUpdates = () => {
   const allClosings = allClosingsRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
   const allFGInvites = allFGInvitesRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
 
+  // Activity progression: filter to show only prospects eligible for the next step
+  const inviteInfoIds = new Set(allInvites.map((inv: any) => inv.info_id))
+  const availableInfosForInvites = allInfos.filter((info: any) => !inviteInfoIds.has(info.id))
+
+  const planInviteIds = new Set(allPlans.map((plan: any) => plan.invite_id))
+  const availableInvitesForPlans = allInvites.filter((invite: any) => !planInviteIds.has(invite.id))
+
+  const closingPlanIds = new Set(allClosings.map((closing: any) => closing.plan_id))
+  const availablePlansForClosings = allPlans.filter((plan: any) => !closingPlanIds.has(plan.id))
+
+  const fgInviteClosingIds = new Set(allFGInvites.map((fg: any) => fg.closing_id))
+  const availableClosingsForFGInvites = allClosings.filter((closing: any) => !fgInviteClosingIds.has(closing.id))
+
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const typeToRequestKey: Record<string, keyof DailyUpdateRequest> = {
-        'info': 'infos',
-        'invite': 'invites',
-        'plan': 'plans',
-        'closing': 'closings',
-        'fg_invite': 'fg_invites',
-        'feel_good': 'feel_goods',
-      }
-
       const request: DailyUpdateRequest = {
         date: selectedDate,
         infos: [],
@@ -131,12 +135,13 @@ export const DailyUpdates = () => {
       }
 
       changes.forEach((change) => {
-        const typeKey = typeToRequestKey[change.type]
-        if (typeKey) {
+        const typeKey = change.type as keyof DailyUpdateRequest
+        if (typeKey in request) {
           ;(request[typeKey] as ActivityUpdate[]).push(change)
         }
       })
 
+      console.log('Daily Updates Request:', request)
       const res = await api.post<DailyUpdateResponse>('/daily-updates', request)
       return res.data
     },
@@ -147,49 +152,60 @@ export const DailyUpdates = () => {
     },
   })
 
-  const handleActivityChange = (type: string, activityId: string, field: string, value: any) => {
-    let key = `${type}-${activityId}`
-    let existing = changes.get(key)
-
-    if (!activityId && !existing) {
-      for (const [k, v] of changes.entries()) {
-        if (v.type === type && !v.id && v.action === 'create') {
-          key = k
-          existing = v
-          break
-        }
+  const extractTypeFromChangeKey = (changeKey: string): string => {
+    const types = ['infos', 'invites', 'plans', 'closings', 'fg_invites', 'feel_goods']
+    for (const type of types) {
+      if (changeKey.startsWith(`${type}-`)) {
+        return type
       }
     }
+    return changeKey.split('-')[0]
+  }
+
+  const handleActivityChange = (changeKey: string, field: string, value: any) => {
+    let existing = changes.get(changeKey)
 
     if (!existing) {
+      const type = extractTypeFromChangeKey(changeKey)
+      const id = changeKey.substring(type.length + 1)
+      const isNewRecord = id.startsWith('new-')
       existing = {
-        id: activityId,
+        id: isNewRecord ? '' : id,
         type,
-        action: activityId ? 'update' : 'create',
+        action: isNewRecord ? 'create' : 'update',
         data: {},
       }
     }
 
     existing.data[field] = value
-    setChanges(new Map(changes.set(key, existing)))
+    setChanges(new Map(changes.set(changeKey, existing)))
   }
 
-  const handleDeleteActivity = (type: string, activityId: string) => {
-    const key = `${type}-${activityId}`
-    const activity = changes.get(key) || {
-      id: activityId,
+  const handleDeleteActivity = (changeKey: string) => {
+    const existing = changes.get(changeKey)
+    const type = extractTypeFromChangeKey(changeKey)
+    const id = changeKey.substring(type.length + 1)
+
+    // For new unsaved rows (id starts with 'new-'), just remove from changes
+    if (id.startsWith('new-')) {
+      const newChanges = new Map(changes)
+      newChanges.delete(changeKey)
+      setChanges(newChanges)
+      setEditingId(null)
+      return
+    }
+
+    // For existing persisted rows, mark as delete
+    const activity = existing || {
+      id,
       type,
       action: 'delete' as const,
       data: {},
     }
     activity.action = 'delete'
     const newChanges = new Map(changes)
-    newChanges.set(key, activity)
+    newChanges.set(changeKey, activity)
     setChanges(newChanges)
-
-    const newDeleted = new Set(deletedIds)
-    newDeleted.add(key)
-    setDeletedIds(newDeleted)
   }
 
   const handleAddActivity = (type: string) => {
@@ -201,6 +217,7 @@ export const DailyUpdates = () => {
       action: 'create',
       data: {},
     })))
+    setEditingId(key)
   }
 
   const toggleSection = (type: string) => {
@@ -266,12 +283,14 @@ export const DailyUpdates = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredActivities.map((activity) =>
-                      renderRow(activity, editingId === `${type}-${activity.id}`, `${type}-${activity.id}`)
-                    )}
-                    {newActivityKeys.map((key) =>
-                      renderRow({}, true, key)
-                    )}
+                    {filteredActivities.map((activity) => {
+                      const changeKey = `${type}-${activity.id}`
+                      return renderRow(activity, editingId === changeKey, changeKey)
+                    })}
+                    {newActivityKeys.map((key) => {
+                      const isEditing = editingId === key
+                      return renderRow({}, isEditing, key)
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -329,19 +348,32 @@ export const DailyUpdates = () => {
               { key: 'status', label: 'Status' },
               { key: 'phone', label: 'Phone' },
               { key: 'remarks', label: 'Remarks' },
-            ], (activity, isEditing, changeKey) => (
-              <InfoTableRow
-                key={changeKey}
-                info={activity}
-                isEditing={isEditing}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onFieldChange={(field, value) => handleActivityChange('infos', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('infos', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  // For new unsaved rows, remove from changes
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <InfoTableRow
+                  key={changeKey}
+                  info={activity}
+                  isEditing={isEditing}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
             {renderTable('invites', 'Invites', dailyUpdate.invites, [
               { key: 'prospect', label: 'Prospect' },
               { key: 'mode', label: 'Mode' },
@@ -349,21 +381,33 @@ export const DailyUpdates = () => {
               { key: 'meeting_time', label: 'Time' },
               { key: 'status', label: 'Status' },
               { key: 'remarks', label: 'Remarks' },
-            ], (activity, isEditing, changeKey) => (
-              <InviteTableRow
-                key={changeKey}
-                invite={activity}
-                prospects={allInfos}
-                isEditing={isEditing}
-                defaultMeetingDate={selectedDate}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                onFieldChange={(field, value) => handleActivityChange('invites', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('invites', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <InviteTableRow
+                  key={changeKey}
+                  invite={activity}
+                  prospects={availableInfosForInvites}
+                  isEditing={isEditing}
+                  defaultMeetingDate={selectedDate}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
             {renderTable('plans', 'Plans', dailyUpdate.plans, [
               { key: 'prospect', label: 'Prospect' },
               { key: 'ul1', label: 'UL1' },
@@ -371,91 +415,139 @@ export const DailyUpdates = () => {
               { key: 'expected_uvs', label: 'UVs' },
               { key: 'status', label: 'Status' },
               { key: 'pipeline_status', label: 'Pipeline' },
-            ], (activity, isEditing, changeKey) => (
-              <PlanTableRow
-                key={changeKey}
-                plan={activity}
-                invites={allInvites}
-                prospects={allInfos}
-                isEditing={isEditing}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                onFieldChange={(field, value) => handleActivityChange('plans', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('plans', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <PlanTableRow
+                  key={changeKey}
+                  plan={activity}
+                  invites={availableInvitesForPlans}
+                  prospects={allInfos}
+                  isEditing={isEditing}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
             {renderTable('closings', 'Closings', dailyUpdate.closings, [
               { key: 'prospect', label: 'Prospect' },
               { key: 'closing_date', label: 'Closing Date' },
               { key: 'status', label: 'Status' },
               { key: 'remarks', label: 'Remarks' },
-            ], (activity, isEditing, changeKey) => (
-              <ClosingTableRow
-                key={changeKey}
-                closing={activity}
-                plans={allPlans}
-                invites={allInvites}
-                prospects={allInfos}
-                isEditing={isEditing}
-                defaultClosingDate={selectedDate}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                onFieldChange={(field, value) => handleActivityChange('closings', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('closings', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <ClosingTableRow
+                  key={changeKey}
+                  closing={activity}
+                  plans={availablePlansForClosings}
+                  invites={allInvites}
+                  prospects={allInfos}
+                  isEditing={isEditing}
+                  defaultClosingDate={selectedDate}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
             {renderTable('fg_invites', 'FG Invites', dailyUpdate.fg_invites, [
               { key: 'prospect', label: 'Prospect' },
               { key: 'mode', label: 'Mode' },
               { key: 'meeting_date', label: 'Meeting Date' },
               { key: 'meeting_time', label: 'Time' },
               { key: 'status', label: 'Status' },
-            ], (activity, isEditing, changeKey) => (
-              <FGInviteTableRow
-                key={changeKey}
-                fgInvite={activity}
-                closings={allClosings}
-                plans={allPlans}
-                invites={allInvites}
-                prospects={allInfos}
-                isEditing={isEditing}
-                defaultMeetingDate={selectedDate}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                onFieldChange={(field, value) => handleActivityChange('fg_invites', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('fg_invites', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <FGInviteTableRow
+                  key={changeKey}
+                  fgInvite={activity}
+                  closings={availableClosingsForFGInvites}
+                  plans={allPlans}
+                  invites={allInvites}
+                  prospects={allInfos}
+                  isEditing={isEditing}
+                  defaultMeetingDate={selectedDate}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
             {renderTable('feel_goods', 'Feel Goods', dailyUpdate.feel_goods, [
               { key: 'prospect', label: 'Prospect' },
               { key: 'ul1', label: 'UL1' },
               { key: 'ul2', label: 'UL2' },
               { key: 'status', label: 'Status' },
               { key: 'remarks', label: 'Remarks' },
-            ], (activity, isEditing, changeKey) => (
-              <FeelGoodTableRow
-                key={changeKey}
-                feelGood={activity}
-                fgInvites={allFGInvites}
-                closings={allClosings}
-                plans={allPlans}
-                invites={allInvites}
-                prospects={allInfos}
-                isEditing={isEditing}
-                getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
-                onEdit={() => setEditingId(changeKey)}
-                onCancel={() => setEditingId(null)}
-                onSave={() => setEditingId(null)}
-                onFieldChange={(field, value) => handleActivityChange('feel_goods', activity.id, field, value)}
-                onDelete={() => handleDeleteActivity('feel_goods', activity.id)}
-              />
-            ))}
+            ], (activity, isEditing, changeKey) => {
+              const handleCancel = () => {
+                const type = extractTypeFromChangeKey(changeKey)
+                const id = changeKey.substring(type.length + 1)
+                if (id.startsWith('new-')) {
+                  const newChanges = new Map(changes)
+                  newChanges.delete(changeKey)
+                  setChanges(newChanges)
+                }
+                setEditingId(null)
+              }
+              return (
+                <FeelGoodTableRow
+                  key={changeKey}
+                  feelGood={activity}
+                  fgInvites={allFGInvites}
+                  closings={allClosings}
+                  plans={allPlans}
+                  invites={allInvites}
+                  prospects={allInfos}
+                  isEditing={isEditing}
+                  getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
+                  onEdit={() => setEditingId(changeKey)}
+                  onCancel={handleCancel}
+                  onSave={() => setEditingId(null)}
+                  onFieldChange={(field, value) => handleActivityChange(changeKey, field, value)}
+                  onDelete={() => handleDeleteActivity(changeKey)}
+                />
+              )
+            })}
 
             {(changes.size > 0 || deletedIds.size > 0) && (
               <div className="mt-8 flex gap-3">
@@ -577,11 +669,11 @@ const InfoTableRow = ({ info, isEditing, getFieldValue, onEdit, onCancel, onSave
 
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{info.prospect_name}</td>
-      <td className="px-4 py-3 text-sm">{info.response || '—'}</td>
-      <td className="px-4 py-3 text-sm">{info.status}</td>
-      <td className="px-4 py-3 text-sm">{info.phone || '—'}</td>
-      <td className="px-4 py-3 text-sm">{info.remarks || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('prospect_name', info.prospect_name)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('response', info.response) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', info.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('phone', info.phone) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('remarks', info.remarks) || '—'}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -618,7 +710,11 @@ interface InviteTableRowProps {
 }
 
 const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
-  const prospectName = prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—'
+  const getProspectName = () => {
+    const pendingInfoId = getFieldValue('info_id', null)
+    const infoId = pendingInfoId || invite.info_id
+    return prospects.find((p) => p.id === infoId)?.prospect_name || '—'
+  }
 
   if (isEditing) {
     return (
@@ -705,12 +801,12 @@ const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getF
 
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{prospectName}</td>
-      <td className="px-4 py-3 text-sm">{invite.mode || '—'}</td>
-      <td className="px-4 py-3 text-sm">{invite.meeting_date || '—'}</td>
-      <td className="px-4 py-3 text-sm">{fromApiTime(invite.meeting_time || '') || '—'}</td>
-      <td className="px-4 py-3 text-sm">{invite.status}</td>
-      <td className="px-4 py-3 text-sm">{invite.remarks || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getProspectName()}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('mode', invite.mode) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('meeting_date', invite.meeting_date) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{fromApiTime(getFieldValue('meeting_time', invite.meeting_time) || '') || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', invite.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('remarks', invite.remarks) || '—'}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -747,9 +843,12 @@ interface PlanTableRowProps {
 }
 
 const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
-  const prospectName = prospects.find((p) =>
-    invites.find((i) => i.id === plan.invite_id)?.info_id === p.id
-  )?.prospect_name || '—'
+  const getProspectName = () => {
+    const pendingInviteId = getFieldValue('invite_id', null)
+    const inviteId = pendingInviteId || plan.invite_id
+    const invite = invites.find((i) => i.id === inviteId)
+    return prospects.find((p) => p.id === invite?.info_id)?.prospect_name || '—'
+  }
 
   if (isEditing) {
     return (
@@ -845,12 +944,12 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
 
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{prospectName}</td>
-      <td className="px-4 py-3 text-sm">{plan.ul1}</td>
-      <td className="px-4 py-3 text-sm">{plan.ul2}</td>
-      <td className="px-4 py-3 text-sm">{plan.expected_uvs}</td>
-      <td className="px-4 py-3 text-sm">{plan.status}</td>
-      <td className="px-4 py-3 text-sm">{plan.pipeline_status}</td>
+      <td className="px-4 py-3 text-sm">{getProspectName()}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('ul1', plan.ul1)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('ul2', plan.ul2)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('expected_uvs', plan.expected_uvs)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', plan.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('pipeline_status', plan.pipeline_status)}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -889,9 +988,13 @@ interface ClosingTableRowProps {
 }
 
 const ClosingTableRow = ({ closing, plans, invites, prospects, isEditing, defaultClosingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: ClosingTableRowProps) => {
-  const plan = plans.find((p) => p.id === closing.plan_id)
-  const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
-  const prospectName = invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
+  const getProspectName = () => {
+    const pendingPlanId = getFieldValue('plan_id', null)
+    const planId = pendingPlanId || closing.plan_id
+    const plan = plans.find((p) => p.id === planId)
+    const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
+    return invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
+  }
 
   if (isEditing) {
     return (
@@ -966,10 +1069,10 @@ const ClosingTableRow = ({ closing, plans, invites, prospects, isEditing, defaul
 
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{prospectName}</td>
-      <td className="px-4 py-3 text-sm">{closing.closing_date || '—'}</td>
-      <td className="px-4 py-3 text-sm">{closing.status}</td>
-      <td className="px-4 py-3 text-sm">{closing.remarks || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getProspectName()}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('closing_date', closing.closing_date) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', closing.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('remarks', closing.remarks) || '—'}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -1009,10 +1112,14 @@ interface FGInviteTableRowProps {
 }
 
 const FGInviteTableRow = ({ fgInvite, closings, plans, invites, prospects, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: FGInviteTableRowProps) => {
-  const closing = closings.find((c) => c.id === fgInvite.closing_id)
-  const plan = closing ? plans.find((p) => p.id === closing.plan_id) : null
-  const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
-  const prospectName = invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
+  const getProspectName = () => {
+    const pendingClosingId = getFieldValue('closing_id', null)
+    const closingId = pendingClosingId || fgInvite.closing_id
+    const closing = closings.find((c) => c.id === closingId)
+    const plan = closing ? plans.find((p) => p.id === closing.plan_id) : null
+    const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
+    return invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
+  }
 
   if (isEditing) {
     return (
@@ -1095,11 +1202,11 @@ const FGInviteTableRow = ({ fgInvite, closings, plans, invites, prospects, isEdi
 
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{prospectName}</td>
-      <td className="px-4 py-3 text-sm">{fgInvite.mode || '—'}</td>
-      <td className="px-4 py-3 text-sm">{fgInvite.meeting_date || '—'}</td>
-      <td className="px-4 py-3 text-sm">{fromApiTime(fgInvite.meeting_time || '') || '—'}</td>
-      <td className="px-4 py-3 text-sm">{fgInvite.status}</td>
+      <td className="px-4 py-3 text-sm">{getProspectName()}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('mode', fgInvite.mode) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('meeting_date', fgInvite.meeting_date) || '—'}</td>
+      <td className="px-4 py-3 text-sm">{fromApiTime(getFieldValue('meeting_time', fgInvite.meeting_time) || '') || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', fgInvite.status)}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -1139,12 +1246,6 @@ interface FeelGoodTableRowProps {
 }
 
 const FeelGoodTableRow = ({ feelGood, fgInvites, closings, plans, invites, prospects, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: FeelGoodTableRowProps) => {
-  const fgInvite = fgInvites.find((f) => f.id === feelGood.fg_invite_id)
-  const closing = fgInvite ? closings.find((c) => c.id === fgInvite.closing_id) : null
-  const plan = closing ? plans.find((p) => p.id === closing.plan_id) : null
-  const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
-  const prospectName = invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
-
   if (isEditing) {
     return (
       <tr className="border-b dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
@@ -1226,13 +1327,23 @@ const FeelGoodTableRow = ({ feelGood, fgInvites, closings, plans, invites, prosp
     )
   }
 
+  const getProspectName = () => {
+    const pendingFgInviteId = getFieldValue('fg_invite_id', null)
+    const fgInviteId = pendingFgInviteId || feelGood.fg_invite_id
+    const fg = fgInvites.find((f) => f.id === fgInviteId)
+    const closing = fg ? closings.find((c) => c.id === fg.closing_id) : null
+    const plan = closing ? plans.find((p) => p.id === closing.plan_id) : null
+    const invite = plan ? invites.find((i) => i.id === plan.invite_id) : null
+    return invite ? prospects.find((p) => p.id === invite.info_id)?.prospect_name || '—' : '—'
+  }
+
   return (
     <tr className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <td className="px-4 py-3 text-sm">{prospectName}</td>
-      <td className="px-4 py-3 text-sm">{feelGood.ul1}</td>
-      <td className="px-4 py-3 text-sm">{feelGood.ul2}</td>
-      <td className="px-4 py-3 text-sm">{feelGood.status}</td>
-      <td className="px-4 py-3 text-sm">{feelGood.remarks || '—'}</td>
+      <td className="px-4 py-3 text-sm">{getProspectName()}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('ul1', feelGood.ul1)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('ul2', feelGood.ul2)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('status', feelGood.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('remarks', feelGood.remarks) || '—'}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
