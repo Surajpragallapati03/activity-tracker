@@ -149,6 +149,7 @@ export const DailyUpdates = () => {
       queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
       setChanges(new Map())
       setDeletedIds(new Set())
+      setEditingId(null)
     },
   })
 
@@ -412,6 +413,7 @@ export const DailyUpdates = () => {
               { key: 'prospect', label: 'Prospect' },
               { key: 'ul1', label: 'UL1' },
               { key: 'ul2', label: 'UL2' },
+              { key: 'quoted_amount', label: 'Quoted Amount' },
               { key: 'expected_uvs', label: 'UVs' },
               { key: 'status', label: 'Status' },
               { key: 'pipeline_status', label: 'Pipeline' },
@@ -482,6 +484,7 @@ export const DailyUpdates = () => {
               { key: 'meeting_date', label: 'Meeting Date' },
               { key: 'meeting_time', label: 'Time' },
               { key: 'status', label: 'Status' },
+              { key: 'remarks', label: 'Remarks' },
             ], (activity, isEditing, changeKey) => {
               const handleCancel = () => {
                 const type = extractTypeFromChangeKey(changeKey)
@@ -890,6 +893,15 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
         </td>
         <td className="px-4 py-3">
           <input
+            type="text"
+            value={getFieldValue('quoted_amount', '')}
+            onChange={(e) => onFieldChange('quoted_amount', e.target.value)}
+            placeholder="Quoted Amount *"
+            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+          />
+        </td>
+        <td className="px-4 py-3">
+          <input
             type="number"
             value={getFieldValue('expected_uvs', '')}
             onChange={(e) => onFieldChange('expected_uvs', parseFloat(e.target.value))}
@@ -947,6 +959,7 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
       <td className="px-4 py-3 text-sm">{getProspectName()}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('ul1', plan.ul1)}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('ul2', plan.ul2)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('quoted_amount', plan.quoted_amount)}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('expected_uvs', plan.expected_uvs)}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('status', plan.status)}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('pipeline_status', plan.pipeline_status)}</td>
@@ -1178,6 +1191,15 @@ const FGInviteTableRow = ({ fgInvite, closings, plans, invites, prospects, isEdi
             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
           />
         </td>
+        <td className="px-4 py-3">
+          <input
+            type="text"
+            value={getFieldValue('remarks', '')}
+            onChange={(e) => onFieldChange('remarks', e.target.value || null)}
+            placeholder="Remarks"
+            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+          />
+        </td>
         <td className="px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2">
             <button
@@ -1207,6 +1229,7 @@ const FGInviteTableRow = ({ fgInvite, closings, plans, invites, prospects, isEdi
       <td className="px-4 py-3 text-sm">{getFieldValue('meeting_date', fgInvite.meeting_date) || '—'}</td>
       <td className="px-4 py-3 text-sm">{fromApiTime(getFieldValue('meeting_time', fgInvite.meeting_time) || '') || '—'}</td>
       <td className="px-4 py-3 text-sm">{getFieldValue('status', fgInvite.status)}</td>
+      <td className="px-4 py-3 text-sm">{getFieldValue('remarks', fgInvite.remarks) || '—'}</td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
