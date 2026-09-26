@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight, TrendingUp, Bookmark, BarChart3 } from 'lucide-react'
+import { Menu, X, ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight, TrendingUp, Bookmark, BarChart3, Clock } from 'lucide-react'
 
 interface SidebarProps {
   isCollapsed: boolean
@@ -15,10 +15,11 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
   const mainItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/users', label: 'Users', icon: Users },
+    { href: '/infos', label: 'Infos', icon: FileText },
+    { href: '/daily-updates', label: 'Daily Updates', icon: Clock },
     { href: '/pipeline-updates', label: 'Pipeline Updates', icon: TrendingUp },
     { href: '/kiv', label: 'KIV', icon: Bookmark },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '/infos', label: 'Infos', icon: FileText },
   ]
 
   const activityItems = [

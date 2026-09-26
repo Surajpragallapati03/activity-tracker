@@ -26,5 +26,6 @@ func Setup(r *gin.Engine, db *pgxpool.Pool, cfg *config.Config) {
 	SetupClosingRoutes(protected, db, authzService)
 	SetupFGInviteRoutes(protected, db, authzService)
 	SetupFeelGoodRoutes(protected, db, authzService)
+	SetupDailyUpdateRoutes(protected, db, authzService)
 	SetupReportRoutes(protected, db, authzService)
 }
