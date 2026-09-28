@@ -12,12 +12,14 @@ func SetupPlanRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.Aut
 	inviteRepo := repository.NewInviteRepository(db)
 	planRepo := repository.NewPlanRepository(db)
 	userRepo := repository.NewUserRepository(db)
-	planService := services.NewPlanService(planRepo, inviteRepo, userRepo)
-	handler := handlers.NewPlanHandler(planService, authzService)
+	infoRepo := repository.NewInfoRepository(db)
+	planService := services.NewPlanServiceWithInfo(planRepo, inviteRepo, userRepo, infoRepo)
+	handler := handlers.NewPlanHandler(planService, authzService, db)
 
 	plans := r.Group("/plans")
 	{
 		plans.POST("", handler.CreatePlan)
+		plans.POST("/create-with-dkd", handler.CreatePlanWithDKD)
 		plans.GET("", handler.ListPlans)
 		plans.GET("/:id", handler.GetPlan)
 		plans.PUT("/:id", handler.UpdatePlan)

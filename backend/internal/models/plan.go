@@ -59,3 +59,27 @@ type ListPlansResponse struct {
 	Page  int    `json:"page"`
 	Limit int    `json:"limit"`
 }
+
+type CreatePlanWithDKDRequest struct {
+	IRID           string  `json:"ir_id" binding:"required"`
+	ProspectName   string  `json:"prospect_name" binding:"required"`
+	Phone          *string `json:"phone"`
+	InfoStatus     string  `json:"info_status" binding:"required"`
+	Mode           *string `json:"mode"`
+	MeetingDate    *string `json:"meeting_date"`
+	MeetingTime    *string `json:"meeting_time"`
+	InviteStatus   string  `json:"invite_status"`
+	UL1            string  `json:"ul1" binding:"required"`
+	UL2            string  `json:"ul2" binding:"required"`
+	QuotedAmount   string  `json:"quoted_amount" binding:"required"`
+	ExpectedUVs    float64 `json:"expected_uvs" binding:"required"`
+	Status         string  `json:"status" binding:"required"`
+	Remarks        string  `json:"remarks" binding:"required"`
+	PipelineStatus string  `json:"pipeline_status"`
+}
+
+type PlanWithChainResponse struct {
+	Plan   *Plan          `json:"plan"`
+	Invite *InviteResponse `json:"invite"`
+	Info   *Info          `json:"info"`
+}

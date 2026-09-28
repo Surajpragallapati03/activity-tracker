@@ -107,11 +107,14 @@ export const Plans = () => {
 
   const createMutation = useMutation({
     mutationFn: async (req: any) => {
-      const res = await api.post<Plan>('/plans', req)
+      const endpoint = req.use_dkd ? '/plans/create-with-dkd' : '/plans'
+      const res = await api.post<Plan>(endpoint, req)
       return res.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
+      queryClient.invalidateQueries({ queryKey: ['infos-for-plan-selector'] })
+      queryClient.invalidateQueries({ queryKey: ['invites-for-plan-selector'] })
       setIsCreateOpen(false)
     },
   })
@@ -544,9 +547,14 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>(currentUser?.id || '')
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false)
   const [ownerSearchInput, setOwnerSearchInput] = useState('')
+  const [useDKD, setUseDKD] = useState(false)
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState({
     invite_id: '',
+    prospect_name: '',
+    phone: '',
+    info_status: '',
+    mode: 'virtual',
     ul1: '',
     ul2: '',
     quoted_amount: '',
@@ -620,26 +628,49 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
 
   const handleOwnerSelect = (userId: string) => {
     setSelectedOwnerId(userId)
-    setForm({ ...form, invite_id: '' })
+    setForm({ ...form, invite_id: '', prospect_name: '', phone: '', info_status: '' })
     setShowOwnerDropdown(false)
     setOwnerSearchInput('')
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedOwnerUser || !form.invite_id) return
-    const submitData = {
-      ir_id: selectedOwnerUser.ir_id,
-      invite_id: form.invite_id,
-      ul1: form.ul1,
-      ul2: form.ul2,
-      quoted_amount: form.quoted_amount || '',
-      expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
-      status: form.status,
-      remarks: form.remarks || '',
-      pipeline_status: form.pipeline_status,
+    if (!selectedOwnerUser) return
+
+    if (useDKD) {
+      if (!form.prospect_name || !form.info_status) return
+      const submitData = {
+        use_dkd: true,
+        ir_id: selectedOwnerUser.ir_id,
+        prospect_name: form.prospect_name,
+        phone: form.phone || null,
+        info_status: form.info_status,
+        mode: form.mode || 'virtual',
+        ul1: form.ul1,
+        ul2: form.ul2,
+        quoted_amount: form.quoted_amount || '',
+        expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
+        status: form.status,
+        remarks: form.remarks || '',
+        pipeline_status: form.pipeline_status,
+      }
+      onSubmit(submitData)
+    } else {
+      if (!form.invite_id) return
+      const submitData = {
+        use_dkd: false,
+        ir_id: selectedOwnerUser.ir_id,
+        invite_id: form.invite_id,
+        ul1: form.ul1,
+        ul2: form.ul2,
+        quoted_amount: form.quoted_amount || '',
+        expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
+        status: form.status,
+        remarks: form.remarks || '',
+        pipeline_status: form.pipeline_status,
+      }
+      onSubmit(submitData)
     }
-    onSubmit(submitData)
   }
 
   return (
@@ -702,25 +733,93 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
 
             {isOwnerSelected && (
               <>
-                <div>
-                  <label className="label">Invite *</label>
-                  <select
-                    required
-                    value={form.invite_id}
-                    onChange={(e) => setForm({ ...form, invite_id: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">Select Invite</option>
-                    {availableInvites.map((invite) => {
-                      const info = infos?.find((i) => i.id === invite.info_id)
-                      return (
-                        <option key={invite.id} value={invite.id}>
-                          {info?.prospect_name || 'Unknown'} ({info?.phone || 'N/A'})
-                        </option>
-                      )
-                    })}
-                  </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="use-dkd"
+                    checked={useDKD}
+                    onChange={(e) => {
+                      setUseDKD(e.target.checked)
+                      if (e.target.checked) {
+                        setForm({ ...form, invite_id: '', prospect_name: '', phone: '', info_status: '' })
+                      } else {
+                        setForm({ ...form, prospect_name: '', phone: '', info_status: '' })
+                      }
+                    }}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="use-dkd" className="label cursor-pointer">
+                    Create with DKD (Info + Invite)
+                  </label>
                 </div>
+
+                {useDKD ? (
+                  <>
+                    <div>
+                      <label className="label">Prospect Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={form.prospect_name}
+                        onChange={(e) => setForm({ ...form, prospect_name: e.target.value })}
+                        className="input"
+                        placeholder="Prospect name"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Phone</label>
+                      <input
+                        type="text"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="input"
+                        placeholder="Phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Info Status *</label>
+                      <input
+                        type="text"
+                        required
+                        value={form.info_status}
+                        onChange={(e) => setForm({ ...form, info_status: e.target.value })}
+                        className="input"
+                        placeholder="Info status"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Mode</label>
+                      <select
+                        value={form.mode}
+                        onChange={(e) => setForm({ ...form, mode: e.target.value })}
+                        className="input"
+                      >
+                        <option value="virtual">Virtual</option>
+                        <option value="physical">Physical</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="label">Invite *</label>
+                    <select
+                      required
+                      value={form.invite_id}
+                      onChange={(e) => setForm({ ...form, invite_id: e.target.value })}
+                      className="input"
+                    >
+                      <option value="">Select Invite</option>
+                      {availableInvites.map((invite) => {
+                        const info = infos?.find((i) => i.id === invite.info_id)
+                        return (
+                          <option key={invite.id} value={invite.id}>
+                            {info?.prospect_name || 'Unknown'} ({info?.phone || 'N/A'})
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="label">UL1 *</label>
                   <input

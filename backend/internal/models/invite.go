@@ -72,6 +72,23 @@ type ListInvitesResponse struct {
 	Limit int              `json:"limit"`
 }
 
+type CreateInviteWithDKDRequest struct {
+	IRID         string  `json:"ir_id" binding:"required"`
+	ProspectName string  `json:"prospect_name" binding:"required"`
+	Phone        *string `json:"phone"`
+	InfoStatus   string  `json:"info_status" binding:"required"`
+	Mode         *string `json:"mode"`
+	MeetingDate  *string `json:"meeting_date"`
+	MeetingTime  *string `json:"meeting_time"`
+	Status       string  `json:"status" binding:"required"`
+	Remarks      *string `json:"remarks"`
+}
+
+type InviteWithInfoResponse struct {
+	Invite *InviteResponse `json:"invite"`
+	Info   *Info           `json:"info"`
+}
+
 func (i *Invite) ToResponse() *InviteResponse {
 	var meetingDate *string
 	if i.MeetingDate != nil {

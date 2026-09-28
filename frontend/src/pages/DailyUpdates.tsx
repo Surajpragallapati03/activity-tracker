@@ -212,11 +212,15 @@ export const DailyUpdates = () => {
   const handleAddActivity = (type: string) => {
     const newId = `new-${type}-${Date.now()}`
     const key = `${type}-${newId}`
+    const defaultData: Record<string, any> = {}
+    if (type === 'invites' || type === 'fg_invites') {
+      defaultData['mode'] = 'virtual'
+    }
     setChanges(new Map(changes.set(key, {
       id: '',
       type,
       action: 'create',
-      data: {},
+      data: defaultData,
     })))
     setEditingId(key)
   }

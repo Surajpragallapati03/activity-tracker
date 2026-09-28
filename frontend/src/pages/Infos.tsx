@@ -394,7 +394,6 @@ export const Infos = () => {
           isLoading={updateMutation.isPending}
           error={updateMutation.isError ? 'Failed to update info' : null}
           users={getUsersForIRSelector}
-          currentUser={currentUser}
         />
       )}
 
@@ -491,8 +490,6 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
     created_by: currentUser?.id || '',
   })
 
-  const isAdmin = currentUser?.role === 'admin'
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const submitData = {
@@ -572,25 +569,19 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
             </div>
             <div>
               <label className="label">IR ID *</label>
-              {isAdmin ? (
-                <select
-                  required
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800">
-                  {currentUser?.name} ({currentUser?.ir_id})
-                </div>
-              )}
+              <select
+                required
+                value={form.ir_id}
+                onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
+                className="input"
+              >
+                <option value="">Select IR</option>
+                {users?.map((u) => (
+                  <option key={u.id} value={u.ir_id}>
+                    {u.name} ({u.ir_id})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
@@ -614,10 +605,9 @@ interface EditInfoModalProps {
   isLoading: boolean
   error: string | null
   users: User[]
-  currentUser: User | null
 }
 
-const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, currentUser }: EditInfoModalProps) => {
+const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users }: EditInfoModalProps) => {
   const [form, setForm] = useState({
     ir_id: info.ir_id,
     prospect_name: info.prospect_name,
@@ -626,8 +616,6 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, curre
     status: info.status,
     remarks: info.remarks || '',
   })
-
-  const isAdmin = currentUser?.role === 'admin'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -702,23 +690,21 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, curre
                 rows={3}
               />
             </div>
-            {isAdmin && (
-              <div>
-                <label className="label">IR ID</label>
-                <select
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="label">IR ID</label>
+              <select
+                value={form.ir_id}
+                onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
+                className="input"
+              >
+                <option value="">Select IR</option>
+                {users?.map((u) => (
+                  <option key={u.id} value={u.ir_id}>
+                    {u.name} ({u.ir_id})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
             <button type="button" onClick={onClose} className="btn-secondary">

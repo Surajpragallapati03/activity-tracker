@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
@@ -15,10 +16,11 @@ import (
 type InviteHandler struct {
 	service *services.InviteService
 	authz   *services.AuthorizationService
+	db      *pgxpool.Pool
 }
 
-func NewInviteHandler(service *services.InviteService, authz *services.AuthorizationService) *InviteHandler {
-	return &InviteHandler{service: service, authz: authz}
+func NewInviteHandler(service *services.InviteService, authz *services.AuthorizationService, db *pgxpool.Pool) *InviteHandler {
+	return &InviteHandler{service: service, authz: authz, db: db}
 }
 
 func (h *InviteHandler) CreateInvite(c *gin.Context) {
@@ -53,6 +55,32 @@ func (h *InviteHandler) CreateInvite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, invite)
+}
+
+func (h *InviteHandler) CreateInviteWithDKD(c *gin.Context) {
+	var req models.CreateInviteWithDKDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, req.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	resp, err := h.service.CreateInviteWithDKD(c.Request.Context(), &req, user, h.db)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *InviteHandler) GetInvite(c *gin.Context) {
