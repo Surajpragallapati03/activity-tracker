@@ -714,10 +714,16 @@ interface InviteTableRowProps {
   onSave: () => void
   onFieldChange: (field: string, value: any) => void
   onDelete: () => void
+  isDKD?: boolean
 }
 
 const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
+  const isDKD = getFieldValue('isDKD', false)
+
   const getProspectName = () => {
+    if (isDKD) {
+      return getFieldValue('prospect_name', '—')
+    }
     const pendingInfoId = getFieldValue('info_id', null)
     const infoId = pendingInfoId || invite.info_id
     return prospects.find((p) => p.id === infoId)?.prospect_name || '—'
@@ -727,18 +733,57 @@ const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getF
     return (
       <tr className="border-b dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
         <td className="px-4 py-3">
-          <select
-            value={getFieldValue('info_id', '')}
-            onChange={(e) => onFieldChange('info_id', e.target.value)}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
-          >
-            <option value="">Select Prospect *</option>
-            {prospects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.prospect_name}
-              </option>
-            ))}
-          </select>
+          {isDKD ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={getFieldValue('prospect_name', '')}
+                onChange={(e) => onFieldChange('prospect_name', e.target.value)}
+                placeholder="Prospect Name *"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <input
+                type="text"
+                value={getFieldValue('phone', '')}
+                onChange={(e) => onFieldChange('phone', e.target.value || null)}
+                placeholder="Phone"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          ) : (
+            <div>
+              <select
+                value={getFieldValue('info_id', '')}
+                onChange={(e) => onFieldChange('info_id', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              >
+                <option value="">Select Prospect *</option>
+                {prospects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.prospect_name}
+                  </option>
+                ))}
+              </select>
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          )}
         </td>
         <td className="px-4 py-3">
           <select
@@ -847,10 +892,16 @@ interface PlanTableRowProps {
   onSave: () => void
   onFieldChange: (field: string, value: any) => void
   onDelete: () => void
+  isDKD?: boolean
 }
 
 const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
+  const isDKD = getFieldValue('isDKD', false)
+
   const getProspectName = () => {
+    if (isDKD) {
+      return getFieldValue('prospect_name', '—')
+    }
     const pendingInviteId = getFieldValue('invite_id', null)
     const inviteId = pendingInviteId || plan.invite_id
     const invite = invites.find((i) => i.id === inviteId)
@@ -861,21 +912,60 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
     return (
       <tr className="border-b dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
         <td className="px-4 py-3">
-          <select
-            value={getFieldValue('invite_id', '')}
-            onChange={(e) => onFieldChange('invite_id', e.target.value)}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
-          >
-            <option value="">Select Invite *</option>
-            {invites.map((inv) => {
-              const prospect = prospects.find((p) => p.id === inv.info_id)
-              return (
-                <option key={inv.id} value={inv.id}>
-                  {prospect?.prospect_name}
-                </option>
-              )
-            })}
-          </select>
+          {isDKD ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={getFieldValue('prospect_name', '')}
+                onChange={(e) => onFieldChange('prospect_name', e.target.value)}
+                placeholder="Prospect Name *"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <input
+                type="text"
+                value={getFieldValue('phone', '')}
+                onChange={(e) => onFieldChange('phone', e.target.value || null)}
+                placeholder="Phone"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          ) : (
+            <div>
+              <select
+                value={getFieldValue('invite_id', '')}
+                onChange={(e) => onFieldChange('invite_id', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              >
+                <option value="">Select Invite *</option>
+                {invites.map((inv) => {
+                  const prospect = prospects.find((p) => p.id === inv.info_id)
+                  return (
+                    <option key={inv.id} value={inv.id}>
+                      {prospect?.prospect_name}
+                    </option>
+                  )
+                })}
+              </select>
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          )}
         </td>
         <td className="px-4 py-3">
           <input
