@@ -597,13 +597,13 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
     if (!selectedOwnerUser) return
 
     if (useDKD) {
-      if (!form.prospect_name || !form.info_status) return
+      if (!form.prospect_name) return
       const submitData = {
         use_dkd: true,
         ir_id: selectedOwnerUser.ir_id,
         prospect_name: form.prospect_name,
         phone: form.phone || null,
-        info_status: form.info_status,
+        info_status: '',
         mode: form.mode || 'virtual',
         meeting_date: form.meeting_date || undefined,
         meeting_time: toApiTime(form.meeting_time),
@@ -728,17 +728,6 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
                         placeholder="Phone number"
                       />
                     </div>
-                    <div>
-                      <label className="label">Info Status *</label>
-                      <input
-                        type="text"
-                        required
-                        value={form.info_status}
-                        onChange={(e) => setForm({ ...form, info_status: e.target.value })}
-                        className="input"
-                        placeholder="Info status"
-                      />
-                    </div>
                   </>
                 ) : (
                   <div>
@@ -789,10 +778,10 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -917,10 +906,10 @@ const EditInviteModal = ({ invite, onClose, onSubmit, isLoading, error, users, i
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"

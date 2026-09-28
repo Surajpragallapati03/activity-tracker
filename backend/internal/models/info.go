@@ -12,7 +12,7 @@ type Info struct {
 	ProspectName string    `json:"prospect_name"`
 	Phone        *string   `json:"phone"`
 	Response     *string   `json:"response"`
-	Status       string    `json:"status"`
+	Status       *string   `json:"status"`
 	Remarks      *string   `json:"remarks"`
 	CreatedBy    uuid.UUID `json:"created_by"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -24,7 +24,7 @@ type CreateInfoRequest struct {
 	ProspectName string  `json:"prospect_name" binding:"required"`
 	Phone        *string `json:"phone"`
 	Response     *string `json:"response"`
-	Status       string  `json:"status" binding:"required"`
+	Status       *string `json:"status"`
 	Remarks      *string `json:"remarks"`
 	CreatedBy    string  `json:"created_by" binding:"required"`
 }
@@ -34,7 +34,7 @@ type UpdateInfoRequest struct {
 	ProspectName string  `json:"prospect_name"`
 	Phone        *string `json:"phone"`
 	Response     *string `json:"response"`
-	Status       string  `json:"status"`
+	Status       *string `json:"status"`
 	Remarks      *string `json:"remarks"`
 }
 

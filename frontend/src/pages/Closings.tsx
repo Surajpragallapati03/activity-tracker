@@ -722,7 +722,7 @@ const CreateClosingModal = ({ onClose, onSubmit, isLoading, error, users, plans,
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <select
                     required
                     value={form.status}
@@ -813,7 +813,7 @@ const EditClosingModal = ({ closing, onClose, onSubmit, isLoading, error, users,
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <select
                 required
                 value={form.status}

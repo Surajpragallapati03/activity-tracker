@@ -784,10 +784,10 @@ const CreateFGInviteModal = ({ onClose, onSubmit, isLoading, error, users, closi
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -899,10 +899,10 @@ const EditFGInviteModal = ({ fgInvite, onClose, onSubmit, isLoading, error, user
               </select>
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"

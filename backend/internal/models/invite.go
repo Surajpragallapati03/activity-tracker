@@ -13,7 +13,7 @@ type Invite struct {
 	MeetingDate  *time.Time `json:"meeting_date"`
 	MeetingTime  *time.Time `json:"meeting_time"`
 	Mode         *string    `json:"mode"`
-	Status       string     `json:"status"`
+	Status       *string    `json:"status"`
 	Remarks      *string    `json:"remarks"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
@@ -26,7 +26,7 @@ type InviteResponse struct {
 	MeetingDate *string   `json:"meeting_date"`
 	MeetingTime *string   `json:"meeting_time"`
 	Mode        *string   `json:"mode"`
-	Status      string    `json:"status"`
+	Status      *string   `json:"status"`
 	Remarks     *string   `json:"remarks"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -38,7 +38,7 @@ type CreateInviteRequest struct {
 	MeetingDate *string `json:"meeting_date"`
 	MeetingTime *string `json:"meeting_time"`
 	Mode        *string `json:"mode"`
-	Status      string  `json:"status" binding:"required"`
+	Status      *string `json:"status"`
 	Remarks     *string `json:"remarks"`
 }
 
@@ -76,11 +76,11 @@ type CreateInviteWithDKDRequest struct {
 	IRID         string  `json:"ir_id" binding:"required"`
 	ProspectName string  `json:"prospect_name" binding:"required"`
 	Phone        *string `json:"phone"`
-	InfoStatus   string  `json:"info_status" binding:"required"`
+	InfoStatus   *string `json:"info_status"`
 	Mode         *string `json:"mode"`
 	MeetingDate  *string `json:"meeting_date"`
 	MeetingTime  *string `json:"meeting_time"`
-	Status       string  `json:"status" binding:"required"`
+	Status       *string `json:"status"`
 	Remarks      *string `json:"remarks"`
 }
 

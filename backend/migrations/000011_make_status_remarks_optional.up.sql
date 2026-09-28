@@ -1,0 +1,8 @@
+-- Make status optional for all activity tables
+ALTER TABLE infos ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE invites ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE plans ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE plans ALTER COLUMN remarks DROP NOT NULL;
+ALTER TABLE closings ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE fg_invites ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE feel_goods ALTER COLUMN status DROP NOT NULL;

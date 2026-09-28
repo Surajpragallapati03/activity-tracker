@@ -137,7 +137,7 @@ func (s *PlanService) CreatePlanWithDKD(ctx context.Context, req *models.CreateP
 	infoID := uuid.New()
 	infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
 	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
-	_, err = tx.Exec(ctx, infoQuery, infoID, req.IRID, req.ProspectName, req.Phone, "A", req.InfoStatus, nil, currentUser.ID)
+	_, err = tx.Exec(ctx, infoQuery, infoID, req.IRID, req.ProspectName, req.Phone, "A", normalizeOptionalString(req.InfoStatus), nil, currentUser.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create info: %v", err)
 	}

@@ -787,10 +787,10 @@ const CreateFeelGoodModal = ({ onClose, onSubmit, isLoading, error, users, fgInv
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -893,10 +893,10 @@ const EditFeelGoodModal = ({ feelGood, onClose, onSubmit, isLoading, error, user
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"

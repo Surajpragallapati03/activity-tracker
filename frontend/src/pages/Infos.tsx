@@ -496,6 +496,7 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
       ...form,
       phone: form.phone || undefined,
       response: form.response || undefined,
+      status: form.status || undefined,
       remarks: form.remarks || undefined,
     }
     onSubmit(submitData)
@@ -547,10 +548,9 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
               </select>
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
@@ -672,10 +672,9 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users }: Edi
               </select>
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"

@@ -11,7 +11,7 @@ type Closing struct {
 	PlanID      uuid.UUID  `json:"plan_id"`
 	IRID        string     `json:"ir_id"`
 	ClosingDate *time.Time `json:"closing_date"`
-	Status      string     `json:"status"`
+	Status      *string    `json:"status"`
 	Remarks     *string    `json:"remarks"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
@@ -22,7 +22,7 @@ type ClosingResponse struct {
 	PlanID      uuid.UUID `json:"plan_id"`
 	IRID        string    `json:"ir_id"`
 	ClosingDate *string   `json:"closing_date"`
-	Status      string    `json:"status"`
+	Status      *string   `json:"status"`
 	Remarks     *string   `json:"remarks"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -32,7 +32,7 @@ type CreateClosingRequest struct {
 	PlanID      string  `json:"plan_id" binding:"required"`
 	IRID        string  `json:"ir_id" binding:"required"`
 	ClosingDate string  `json:"closing_date" binding:"required"`
-	Status      string  `json:"status" binding:"required,oneof=done pending"`
+	Status      *string `json:"status" binding:"omitempty,oneof=done pending"`
 	Remarks     *string `json:"remarks"`
 }
 

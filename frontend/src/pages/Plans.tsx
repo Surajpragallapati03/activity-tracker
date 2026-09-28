@@ -638,20 +638,20 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
     if (!selectedOwnerUser) return
 
     if (useDKD) {
-      if (!form.prospect_name || !form.info_status) return
+      if (!form.prospect_name) return
       const submitData = {
         use_dkd: true,
         ir_id: selectedOwnerUser.ir_id,
         prospect_name: form.prospect_name,
         phone: form.phone || null,
-        info_status: form.info_status,
+        info_status: '',
         mode: form.mode || 'virtual',
         ul1: form.ul1,
         ul2: form.ul2,
         quoted_amount: form.quoted_amount || '',
         expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
         status: form.status,
-        remarks: form.remarks || '',
+        remarks: form.remarks || undefined,
         pipeline_status: form.pipeline_status,
       }
       onSubmit(submitData)
@@ -777,17 +777,6 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                       />
                     </div>
                     <div>
-                      <label className="label">Info Status *</label>
-                      <input
-                        type="text"
-                        required
-                        value={form.info_status}
-                        onChange={(e) => setForm({ ...form, info_status: e.target.value })}
-                        className="input"
-                        placeholder="Info status"
-                      />
-                    </div>
-                    <div>
                       <label className="label">Mode</label>
                       <select
                         value={form.mode}
@@ -865,10 +854,10 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -890,9 +879,8 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                   </select>
                 </div>
                 <div>
-                  <label className="label">Remarks *</label>
+                  <label className="label">Remarks</label>
                   <textarea
-                    required
                     value={form.remarks}
                     onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                     className="input"
@@ -1006,10 +994,10 @@ const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, curre
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"

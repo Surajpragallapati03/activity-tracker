@@ -196,10 +196,7 @@ func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, acti
 		return errors.New("missing or invalid prospect_name")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	response := extractOptionalString(data, "response")
 	phone := extractOptionalString(data, "phone")
@@ -307,10 +304,7 @@ func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activ
 func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User) error {
 	data := activity.Data
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	isDKD := false
 	if dkd, ok := data["isDKD"].(bool); ok {
@@ -528,10 +522,7 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 		return errors.New("missing or invalid expected_uvs")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	remarks, ok := data["remarks"].(string)
 	if !ok {
@@ -718,10 +709,7 @@ func (s *DailyUpdateService) createClosingInTx(ctx context.Context, tx pgx.Tx, a
 		return errors.New("missing or invalid plan_id")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	planUUID, err := uuid.Parse(planID)
 	if err != nil {
@@ -846,10 +834,7 @@ func (s *DailyUpdateService) createFGInviteInTx(ctx context.Context, tx pgx.Tx, 
 		return errors.New("missing or invalid closing_id")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	closingUUID, err := uuid.Parse(closingID)
 	if err != nil {
@@ -1015,10 +1000,7 @@ func (s *DailyUpdateService) createFeelGoodInTx(ctx context.Context, tx pgx.Tx, 
 		return errors.New("missing or invalid ul2")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	fgInviteUUID, err := uuid.Parse(fgInviteID)
 	if err != nil {
