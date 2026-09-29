@@ -92,9 +92,8 @@ func (s *UserService) CreateUserWithPromotion(ctx context.Context, creator *mode
 
 		// Non-admin users can only create under themselves or their downlines
 		if creator.Role != "admin" {
-			// Check if upline_id is creator themselves or a downline
-			if *req.UplineID != creator.ID {
-				return nil, fmt.Errorf("forbidden: non-admin users can only create users under themselves")
+			if !s.canUseAsUpline(ctx, creator.ID, *req.UplineID) {
+				return nil, fmt.Errorf("forbidden")
 			}
 		}
 	}
@@ -222,4 +221,42 @@ func isValidStatus(status string) bool {
 		"inactive": true,
 	}
 	return validStatus[status]
+}
+
+// canUseAsUpline checks if targetID can be used as an upline by creator.
+// Returns true if targetID is the creator themselves or in the creator's downline tree.
+func (s *UserService) canUseAsUpline(ctx context.Context, creatorID uuid.UUID, targetID uuid.UUID) bool {
+	if creatorID == targetID {
+		return true
+	}
+
+	// Check if targetID is in creatorID's downline tree
+	allUsers, _, err := s.repo.List(ctx, &models.ListUsersQuery{Page: 1, Limit: 1000})
+	if err != nil {
+		return false
+	}
+
+	// Build a map for quick lookup
+	userMap := make(map[uuid.UUID]*models.User)
+	for i := range allUsers {
+		userMap[allUsers[i].ID] = &allUsers[i]
+	}
+
+	return s.isInDownlineTree(creatorID, targetID, userMap)
+}
+
+// isInDownlineTree recursively checks if targetID is in the downline tree of creatorID.
+func (s *UserService) isInDownlineTree(creatorID uuid.UUID, targetID uuid.UUID, userMap map[uuid.UUID]*models.User) bool {
+	for _, user := range userMap {
+		if user.UplineID != nil && *user.UplineID == creatorID {
+			if user.ID == targetID {
+				return true
+			}
+			// Recursively check downlines
+			if s.isInDownlineTree(user.ID, targetID, userMap) {
+				return true
+			}
+		}
+	}
+	return false
 }

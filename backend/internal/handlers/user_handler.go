@@ -32,12 +32,8 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	// Admin can create users and optionally specify upline
-	// Non-admin users can create users and must set upline to themselves
-	if currentUser.Role == "admin" {
-		// Admin can optionally specify upline_id, defaults to no upline
-	} else {
-		// Non-admin can only create users under themselves
+	// Non-admin users: if no upline specified, default to themselves
+	if currentUser.Role != "admin" && req.UplineID == nil {
 		req.UplineID = &currentUser.ID
 	}
 

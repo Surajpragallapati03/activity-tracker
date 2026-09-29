@@ -424,6 +424,21 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
 
   const isAdmin = currentUser?.role === 'admin'
 
+  const downlines = useMemo(() => {
+    if (!allUsers || !currentUser) return new Set()
+    const result = new Set<string>()
+    const buildMap = (userId: string) => {
+      allUsers.forEach((u: User) => {
+        if (u.upline_id === userId) {
+          result.add(u.id)
+          buildMap(u.id)
+        }
+      })
+    }
+    buildMap(currentUser.id)
+    return result
+  }, [allUsers, currentUser])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const submitData = {
@@ -512,9 +527,25 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
                   ))}
                 </select>
               ) : (
-                <div className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800">
-                  {currentUser?.name} ({currentUser?.ir_id})
-                </div>
+                <select
+                  value={form.upline_id}
+                  onChange={(e) => setForm({ ...form, upline_id: e.target.value })}
+                  className="input"
+                >
+                  {currentUser && (
+                    <option value={currentUser.id}>
+                      {currentUser.name} ({currentUser.ir_id})
+                    </option>
+                  )}
+                  {Array.from(downlines).map((downlineId) => {
+                    const downlineUser = allUsers?.find((u) => u.id === downlineId)
+                    return downlineUser ? (
+                      <option key={downlineUser.id} value={downlineUser.id}>
+                        {downlineUser.name} ({downlineUser.ir_id})
+                      </option>
+                    ) : null
+                  })}
+                </select>
               )}
             </div>
             <div>
