@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { Info, Invite, Plan, Closing, FGInvite, FeelGood } from '../types/auth'
 import { Plus, Save, Loader2, AlertCircle, ChevronDown, Edit2, Trash2, Check, X } from 'lucide-react'
 
@@ -51,6 +52,7 @@ export const DailyUpdates = () => {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['infos', 'invites', 'plans', 'closings', 'fg_invites', 'feel_goods']))
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const { data: dailyUpdate, isLoading, error } = useQuery({
     queryKey: ['daily-updates', selectedDate],
@@ -109,11 +111,9 @@ export const DailyUpdates = () => {
   const allFGInvites = allFGInvitesRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
 
   // Activity progression: filter to show only prospects eligible for the next step
-  const inviteInfoIds = new Set(allInvites.map((inv: any) => inv.info_id))
-  const availableInfosForInvites = allInfos.filter((info: any) => !inviteInfoIds.has(info.id))
+  const inviteInfoIds = new Set<string>(allInvites.map((inv: any) => inv.info_id))
 
-  const planInviteIds = new Set(allPlans.map((plan: any) => plan.invite_id))
-  const availableInvitesForPlans = allInvites.filter((invite: any) => !planInviteIds.has(invite.id))
+  const planInviteIds = new Set<string>(allPlans.map((plan: any) => plan.invite_id))
 
   const closingPlanIds = new Set(allClosings.map((closing: any) => closing.plan_id))
   const availablePlansForClosings = allPlans.filter((plan: any) => !closingPlanIds.has(plan.id))
@@ -141,7 +141,6 @@ export const DailyUpdates = () => {
         }
       })
 
-      console.log('Daily Updates Request:', request)
       const res = await api.post<DailyUpdateResponse>('/daily-updates', request)
       return res.data
     },
@@ -150,6 +149,10 @@ export const DailyUpdates = () => {
       setChanges(new Map())
       setDeletedIds(new Set())
       setEditingId(null)
+      setSaveError(null)
+    },
+    onError: (error) => {
+      setSaveError(getErrorMessage(error))
     },
   })
 
@@ -212,11 +215,15 @@ export const DailyUpdates = () => {
   const handleAddActivity = (type: string) => {
     const newId = `new-${type}-${Date.now()}`
     const key = `${type}-${newId}`
+    const defaultData: Record<string, any> = {}
+    if (type === 'invites' || type === 'fg_invites') {
+      defaultData['mode'] = 'virtual'
+    }
     setChanges(new Map(changes.set(key, {
       id: '',
       type,
       action: 'create',
-      data: {},
+      data: defaultData,
     })))
     setEditingId(key)
   }
@@ -333,7 +340,7 @@ export const DailyUpdates = () => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-            <p className="text-red-700 dark:text-red-200">{error instanceof Error ? error.message : 'Error loading data'}</p>
+            <p className="text-red-700 dark:text-red-200">{getErrorMessage(error)}</p>
           </div>
         )}
 
@@ -397,7 +404,8 @@ export const DailyUpdates = () => {
                 <InviteTableRow
                   key={changeKey}
                   invite={activity}
-                  prospects={availableInfosForInvites}
+                  prospects={allInfos}
+                  usedProspectIds={inviteInfoIds}
                   isEditing={isEditing}
                   defaultMeetingDate={selectedDate}
                   getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
@@ -432,8 +440,9 @@ export const DailyUpdates = () => {
                 <PlanTableRow
                   key={changeKey}
                   plan={activity}
-                  invites={availableInvitesForPlans}
+                  invites={allInvites}
                   prospects={allInfos}
+                  usedInviteIds={planInviteIds}
                   isEditing={isEditing}
                   getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
                   onEdit={() => setEditingId(changeKey)}
@@ -553,25 +562,34 @@ export const DailyUpdates = () => {
             })}
 
             {(changes.size > 0 || deletedIds.size > 0) && (
-              <div className="mt-8 flex gap-3">
-                <button
-                  onClick={() => {
-                    setChanges(new Map())
-                    setDeletedIds(new Set())
-                    queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
-                  }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => saveMutation.mutate()}
-                  disabled={saveMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
-                >
-                  {saveMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  Save Daily Updates
-                </button>
+              <div className="mt-8 space-y-3">
+                {saveError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
+                    <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" size={18} />
+                    <p className="text-red-700 dark:text-red-300 text-sm">{saveError}</p>
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setChanges(new Map())
+                      setDeletedIds(new Set())
+                      setSaveError(null)
+                      queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
+                    }}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => saveMutation.mutate()}
+                    disabled={saveMutation.isPending}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                  >
+                    {saveMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    Save Daily Updates
+                  </button>
+                </div>
               </div>
             )}
           </>
@@ -702,6 +720,7 @@ const InfoTableRow = ({ info, isEditing, getFieldValue, onEdit, onCancel, onSave
 interface InviteTableRowProps {
   invite: Invite
   prospects: Info[]
+  usedProspectIds: Set<string>
   isEditing: boolean
   defaultMeetingDate?: string
   getFieldValue: (field: string, fallback?: any) => any
@@ -710,10 +729,16 @@ interface InviteTableRowProps {
   onSave: () => void
   onFieldChange: (field: string, value: any) => void
   onDelete: () => void
+  isDKD?: boolean
 }
 
-const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
+const InviteTableRow = ({ invite, prospects, usedProspectIds, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
+  const isDKD = getFieldValue('isDKD', false)
+
   const getProspectName = () => {
+    if (isDKD) {
+      return getFieldValue('prospect_name', '—')
+    }
     const pendingInfoId = getFieldValue('info_id', null)
     const infoId = pendingInfoId || invite.info_id
     return prospects.find((p) => p.id === infoId)?.prospect_name || '—'
@@ -723,18 +748,57 @@ const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getF
     return (
       <tr className="border-b dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
         <td className="px-4 py-3">
-          <select
-            value={getFieldValue('info_id', '')}
-            onChange={(e) => onFieldChange('info_id', e.target.value)}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
-          >
-            <option value="">Select Prospect *</option>
-            {prospects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.prospect_name}
-              </option>
-            ))}
-          </select>
+          {isDKD ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={getFieldValue('prospect_name', '')}
+                onChange={(e) => onFieldChange('prospect_name', e.target.value)}
+                placeholder="Prospect Name *"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <input
+                type="text"
+                value={getFieldValue('phone', '')}
+                onChange={(e) => onFieldChange('phone', e.target.value || null)}
+                placeholder="Phone"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          ) : (
+            <div>
+              <select
+                value={getFieldValue('info_id', '')}
+                onChange={(e) => onFieldChange('info_id', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              >
+                <option value="">Select Prospect *</option>
+                {prospects.filter((p) => !usedProspectIds.has(p.id) || getFieldValue('info_id', null) === p.id).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.prospect_name}
+                  </option>
+                ))}
+              </select>
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          )}
         </td>
         <td className="px-4 py-3">
           <select
@@ -836,6 +900,7 @@ interface PlanTableRowProps {
   plan: Plan
   invites: Invite[]
   prospects: Info[]
+  usedInviteIds: Set<string>
   isEditing: boolean
   getFieldValue: (field: string, fallback?: any) => any
   onEdit: () => void
@@ -843,10 +908,16 @@ interface PlanTableRowProps {
   onSave: () => void
   onFieldChange: (field: string, value: any) => void
   onDelete: () => void
+  isDKD?: boolean
 }
 
-const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
+const PlanTableRow = ({ plan, invites, prospects, usedInviteIds, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
+  const isDKD = getFieldValue('isDKD', false)
+
   const getProspectName = () => {
+    if (isDKD) {
+      return getFieldValue('prospect_name', '—')
+    }
     const pendingInviteId = getFieldValue('invite_id', null)
     const inviteId = pendingInviteId || plan.invite_id
     const invite = invites.find((i) => i.id === inviteId)
@@ -857,21 +928,60 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
     return (
       <tr className="border-b dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
         <td className="px-4 py-3">
-          <select
-            value={getFieldValue('invite_id', '')}
-            onChange={(e) => onFieldChange('invite_id', e.target.value)}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
-          >
-            <option value="">Select Invite *</option>
-            {invites.map((inv) => {
-              const prospect = prospects.find((p) => p.id === inv.info_id)
-              return (
-                <option key={inv.id} value={inv.id}>
-                  {prospect?.prospect_name}
-                </option>
-              )
-            })}
-          </select>
+          {isDKD ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={getFieldValue('prospect_name', '')}
+                onChange={(e) => onFieldChange('prospect_name', e.target.value)}
+                placeholder="Prospect Name *"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <input
+                type="text"
+                value={getFieldValue('phone', '')}
+                onChange={(e) => onFieldChange('phone', e.target.value || null)}
+                placeholder="Phone"
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          ) : (
+            <div>
+              <select
+                value={getFieldValue('invite_id', '')}
+                onChange={(e) => onFieldChange('invite_id', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
+              >
+                <option value="">Select Invite *</option>
+                {invites.filter((inv) => !usedInviteIds.has(inv.id) || getFieldValue('invite_id', null) === inv.id).map((inv) => {
+                  const prospect = prospects.find((p) => p.id === inv.info_id)
+                  return (
+                    <option key={inv.id} value={inv.id}>
+                      {prospect?.prospect_name}
+                    </option>
+                  )
+                })}
+              </select>
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input
+                  type="checkbox"
+                  checked={isDKD}
+                  onChange={(e) => onFieldChange('isDKD', e.target.checked)}
+                  className="rounded"
+                />
+                DKD
+              </label>
+            </div>
+          )}
         </td>
         <td className="px-4 py-3">
           <input

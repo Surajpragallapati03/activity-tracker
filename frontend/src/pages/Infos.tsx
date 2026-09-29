@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -32,6 +33,9 @@ export const Infos = () => {
   const [editingInfo, setEditingInfo] = useState<Info | null>(null)
   const [viewingInfo, setViewingInfo] = useState<Info | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Info | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -79,6 +83,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -90,6 +98,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setEditingInfo(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -100,6 +112,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -370,10 +386,13 @@ export const Infos = () => {
 
       {isCreateOpen && (
         <CreateInfoModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create info' : null}
+          error={createError}
           users={getUsersForIRSelector}
           currentUser={currentUser}
         />
@@ -389,22 +408,27 @@ export const Infos = () => {
       {editingInfo && (
         <EditInfoModal
           info={editingInfo}
-          onClose={() => setEditingInfo(null)}
+          onClose={() => {
+            setEditingInfo(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update info' : null}
+          error={updateError}
           users={getUsersForIRSelector}
-          currentUser={currentUser}
         />
       )}
 
       {deleteConfirm && (
         <DeleteConfirmModal
           info={deleteConfirm}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete info' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
@@ -419,7 +443,7 @@ interface ViewInfoModalProps {
 const ViewInfoModal = ({ info, onClose }: ViewInfoModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Info Details</h3>
         </div>
@@ -491,14 +515,13 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
     created_by: currentUser?.id || '',
   })
 
-  const isAdmin = currentUser?.role === 'admin'
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const submitData = {
       ...form,
       phone: form.phone || undefined,
       response: form.response || undefined,
+      status: form.status || undefined,
       remarks: form.remarks || undefined,
     }
     onSubmit(submitData)
@@ -550,10 +573,9 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
               </select>
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
@@ -572,25 +594,19 @@ const CreateInfoModal = ({ onClose, onSubmit, isLoading, error, users, currentUs
             </div>
             <div>
               <label className="label">IR ID *</label>
-              {isAdmin ? (
-                <select
-                  required
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800">
-                  {currentUser?.name} ({currentUser?.ir_id})
-                </div>
-              )}
+              <select
+                required
+                value={form.ir_id}
+                onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
+                className="input"
+              >
+                <option value="">Select IR</option>
+                {users?.map((u) => (
+                  <option key={u.id} value={u.ir_id}>
+                    {u.name} ({u.ir_id})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
@@ -614,10 +630,9 @@ interface EditInfoModalProps {
   isLoading: boolean
   error: string | null
   users: User[]
-  currentUser: User | null
 }
 
-const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, currentUser }: EditInfoModalProps) => {
+const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users }: EditInfoModalProps) => {
   const [form, setForm] = useState({
     ir_id: info.ir_id,
     prospect_name: info.prospect_name,
@@ -626,8 +641,6 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, curre
     status: info.status,
     remarks: info.remarks || '',
   })
-
-  const isAdmin = currentUser?.role === 'admin'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -684,10 +697,9 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, curre
               </select>
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
@@ -702,23 +714,21 @@ const EditInfoModal = ({ info, onClose, onSubmit, isLoading, error, users, curre
                 rows={3}
               />
             </div>
-            {isAdmin && (
-              <div>
-                <label className="label">IR ID</label>
-                <select
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="label">IR ID</label>
+              <select
+                value={form.ir_id}
+                onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
+                className="input"
+              >
+                <option value="">Select IR</option>
+                {users?.map((u) => (
+                  <option key={u.id} value={u.ir_id}>
+                    {u.name} ({u.ir_id})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
             <button type="button" onClick={onClose} className="btn-secondary">
@@ -745,7 +755,7 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Info</h3>
         </div>

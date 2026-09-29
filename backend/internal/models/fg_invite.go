@@ -13,7 +13,7 @@ type FGInvite struct {
 	MeetingDate  *time.Time `json:"meeting_date"`
 	MeetingTime  *time.Time `json:"meeting_time"`
 	Mode         *string    `json:"mode"`
-	Status       string     `json:"status"`
+	Status       *string    `json:"status"`
 	Remarks      *string    `json:"remarks"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
@@ -26,7 +26,7 @@ type FGInviteResponse struct {
 	MeetingDate  *string   `json:"meeting_date"`
 	MeetingTime  *string   `json:"meeting_time"`
 	Mode         *string   `json:"mode"`
-	Status       string    `json:"status"`
+	Status       *string   `json:"status"`
 	Remarks      *string   `json:"remarks"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
@@ -38,7 +38,7 @@ type CreateFGInviteRequest struct {
 	MeetingDate *string `json:"meeting_date"`
 	MeetingTime *string `json:"meeting_time"`
 	Mode        *string `json:"mode" binding:"omitempty,oneof=virtual physical"`
-	Status      string  `json:"status" binding:"required"`
+	Status      *string `json:"status"`
 	Remarks     *string `json:"remarks"`
 }
 

@@ -43,7 +43,7 @@ func (s *FeelGoodService) CreateFeelGood(ctx context.Context, req *models.Create
 		IRID:       fgInvite.IRID,
 		UL1:        strings.TrimSpace(req.UL1),
 		UL2:        strings.TrimSpace(req.UL2),
-		Status:     strings.TrimSpace(req.Status),
+		Status:     normalizeString(req.Status),
 		Remarks:    normalizeString(req.Remarks),
 	}
 
@@ -218,9 +218,6 @@ func (s *FeelGoodService) validateCreateRequest(ctx context.Context, req *models
 		return errors.New("ul2 is required")
 	}
 
-	if strings.TrimSpace(req.Status) == "" {
-		return errors.New("status is required")
-	}
 
 	fgInviteID, _ := uuid.Parse(req.FGInviteID)
 	_, err := s.fgInviteRepo.GetByID(ctx, fgInviteID)

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan, Closing } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -53,6 +54,9 @@ export const Closings = () => {
   const [editingClosing, setEditingClosing] = useState<Closing | null>(null)
   const [viewingClosing, setViewingClosing] = useState<Closing | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Closing | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -130,6 +134,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -141,6 +149,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setEditingClosing(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -151,6 +163,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -420,10 +436,13 @@ export const Closings = () => {
 
       {isCreateOpen && (
         <CreateClosingModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create closing' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           plans={allPlans || []}
           invites={allInvites || []}
@@ -448,10 +467,13 @@ export const Closings = () => {
           plan={allPlans?.find((p) => p.id === editingClosing.plan_id)}
           invite={allInvites?.find((i) => i.id === allPlans?.find((p) => p.id === editingClosing.plan_id)?.invite_id)}
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === editingClosing.plan_id)?.invite_id)?.info_id)}
-          onClose={() => setEditingClosing(null)}
+          onClose={() => {
+            setEditingClosing(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update closing' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           currentUser={currentUser}
         />
@@ -460,10 +482,13 @@ export const Closings = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === deleteConfirm.plan_id)?.invite_id)?.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete closing' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
@@ -481,7 +506,7 @@ interface ViewClosingModalProps {
 const ViewClosingModal = ({ closing, info, onClose }: ViewClosingModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Closing Details</h3>
         </div>
@@ -722,7 +747,7 @@ const CreateClosingModal = ({ onClose, onSubmit, isLoading, error, users, plans,
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <select
                     required
                     value={form.status}
@@ -813,7 +838,7 @@ const EditClosingModal = ({ closing, onClose, onSubmit, isLoading, error, users,
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <select
                 required
                 value={form.status}
@@ -877,7 +902,7 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Closing</h3>
         </div>

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/repository"
 )
@@ -187,6 +188,76 @@ func (s *InviteService) ListInvites(ctx context.Context, query *models.ListInvit
 		Page:  query.Page,
 		Limit: query.Limit,
 	}, nil
+}
+
+func (s *InviteService) CreateInviteWithDKD(ctx context.Context, req *models.CreateInviteWithDKDRequest, currentUser *models.User, db *pgxpool.Pool) (*models.InviteWithInfoResponse, error) {
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Create Info with response='A'
+	infoID := uuid.New()
+	infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
+	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
+	_, err = tx.Exec(ctx, infoQuery, infoID, req.IRID, req.ProspectName, req.Phone, "A", normalizeOptionalString(req.InfoStatus), nil, currentUser.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create info: %v", err)
+	}
+
+	// Create Invite using the Info ID
+	inviteID := uuid.New()
+
+	mode := "virtual"
+	if req.Mode != nil {
+		mode = *req.Mode
+	}
+
+	inviteQuery := `INSERT INTO invites (id, info_id, ir_id, mode, status, remarks, created_at, updated_at)
+	               VALUES ($1, $2, $3, $4, $5, $6, now(), now())`
+	_, err = tx.Exec(ctx, inviteQuery, inviteID, infoID, req.IRID, mode, req.Status, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create invite: %v", err)
+	}
+
+	// Commit transaction
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	// Fetch the created invite
+	invite, err := s.repo.GetByID(ctx, inviteID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch created invite: %v", err)
+	}
+	if invite == nil {
+		return nil, fmt.Errorf("invite was created but could not be fetched")
+	}
+
+	// Fetch info from database
+	infoRecord := &models.Info{}
+	row := db.QueryRow(ctx, "SELECT id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at FROM infos WHERE id = $1", infoID)
+	if err := row.Scan(&infoRecord.ID, &infoRecord.IRID, &infoRecord.ProspectName, &infoRecord.Phone, &infoRecord.Response, &infoRecord.Status, &infoRecord.Remarks, &infoRecord.CreatedBy, &infoRecord.CreatedAt, &infoRecord.UpdatedAt); err != nil {
+		infoRecord = &models.Info{
+			ID:           infoID,
+			IRID:         req.IRID,
+			ProspectName: req.ProspectName,
+			Phone:        req.Phone,
+			Response:     stringPtr("A"),
+			Status:       normalizeOptionalString(req.InfoStatus),
+		}
+	}
+
+	return &models.InviteWithInfoResponse{
+		Invite: invite.ToResponse(),
+		Info:   infoRecord,
+	}, nil
+}
+
+func stringPtr(s string) *string {
+	return &s
 }
 
 func isValidMode(mode string) bool {

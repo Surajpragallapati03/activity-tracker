@@ -1,0 +1,8 @@
+-- Revert: make status and remarks required again
+ALTER TABLE infos ALTER COLUMN status SET NOT NULL;
+ALTER TABLE invites ALTER COLUMN status SET NOT NULL;
+ALTER TABLE plans ALTER COLUMN status SET NOT NULL;
+ALTER TABLE plans ALTER COLUMN remarks SET NOT NULL;
+ALTER TABLE closings ALTER COLUMN status SET NOT NULL;
+ALTER TABLE fg_invites ALTER COLUMN status SET NOT NULL;
+ALTER TABLE feel_goods ALTER COLUMN status SET NOT NULL;

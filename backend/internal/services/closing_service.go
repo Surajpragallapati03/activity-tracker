@@ -39,7 +39,7 @@ func (s *ClosingService) CreateClosing(ctx context.Context, req *models.CreateCl
 	closing := &models.Closing{
 		PlanID:      planID,
 		ClosingDate: &date,
-		Status:      req.Status,
+		Status:      normalizeString(req.Status),
 		Remarks:     req.Remarks,
 	}
 
@@ -190,7 +190,7 @@ func (s *ClosingService) validateCreateRequest(ctx context.Context, req *models.
 		return errors.New("invalid closing_date format, use YYYY-MM-DD")
 	}
 
-	if req.Status != "done" && req.Status != "pending" {
+	if req.Status != nil && *req.Status != "done" && *req.Status != "pending" {
 		return errors.New("status must be either 'done' or 'pending'")
 	}
 
@@ -222,4 +222,15 @@ func isValidDate(date string) bool {
 	pattern := `^\d{4}-\d{2}-\d{2}$`
 	match, _ := regexp.MatchString(pattern, date)
 	return match
+}
+
+func normalizeString(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*s)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }

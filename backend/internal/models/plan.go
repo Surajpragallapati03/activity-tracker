@@ -14,8 +14,8 @@ type Plan struct {
 	UL2            string    `json:"ul2"`
 	QuotedAmount   string    `json:"quoted_amount"`
 	ExpectedUVs    float64   `json:"expected_uvs"`
-	Status         string    `json:"status"`
-	Remarks        string    `json:"remarks"`
+	Status         *string   `json:"status"`
+	Remarks        *string   `json:"remarks"`
 	PipelineStatus string    `json:"pipeline_status"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
@@ -28,8 +28,8 @@ type CreatePlanRequest struct {
 	UL2            string  `json:"ul2" binding:"required"`
 	QuotedAmount   string  `json:"quoted_amount" binding:"required"`
 	ExpectedUVs    float64 `json:"expected_uvs" binding:"required"`
-	Status         string  `json:"status" binding:"required"`
-	Remarks        string  `json:"remarks" binding:"required"`
+	Status         *string `json:"status"`
+	Remarks        *string `json:"remarks"`
 	PipelineStatus string  `json:"pipeline_status"`
 }
 
@@ -58,4 +58,28 @@ type ListPlansResponse struct {
 	Total int64  `json:"total"`
 	Page  int    `json:"page"`
 	Limit int    `json:"limit"`
+}
+
+type CreatePlanWithDKDRequest struct {
+	IRID           string  `json:"ir_id" binding:"required"`
+	ProspectName   string  `json:"prospect_name" binding:"required"`
+	Phone          *string `json:"phone"`
+	InfoStatus     *string `json:"info_status"`
+	Mode           *string `json:"mode"`
+	MeetingDate    *string `json:"meeting_date"`
+	MeetingTime    *string `json:"meeting_time"`
+	InviteStatus   string  `json:"invite_status"`
+	UL1            string  `json:"ul1" binding:"required"`
+	UL2            string  `json:"ul2" binding:"required"`
+	QuotedAmount   string  `json:"quoted_amount" binding:"required"`
+	ExpectedUVs    float64 `json:"expected_uvs" binding:"required"`
+	Status         *string `json:"status"`
+	Remarks        *string `json:"remarks"`
+	PipelineStatus string  `json:"pipeline_status"`
+}
+
+type PlanWithChainResponse struct {
+	Plan   *Plan          `json:"plan"`
+	Invite *InviteResponse `json:"invite"`
+	Info   *Info          `json:"info"`
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/middleware"
 	"github.com/Surajpragallapati03/activity-tracker/backend/internal/models"
@@ -15,10 +16,11 @@ import (
 type PlanHandler struct {
 	service *services.PlanService
 	authz   *services.AuthorizationService
+	db      *pgxpool.Pool
 }
 
-func NewPlanHandler(service *services.PlanService, authz *services.AuthorizationService) *PlanHandler {
-	return &PlanHandler{service: service, authz: authz}
+func NewPlanHandler(service *services.PlanService, authz *services.AuthorizationService, db *pgxpool.Pool) *PlanHandler {
+	return &PlanHandler{service: service, authz: authz, db: db}
 }
 
 func (h *PlanHandler) CreatePlan(c *gin.Context) {
@@ -49,6 +51,32 @@ func (h *PlanHandler) CreatePlan(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, plan)
+}
+
+func (h *PlanHandler) CreatePlanWithDKD(c *gin.Context) {
+	var req models.CreatePlanWithDKDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user := middleware.GetUser(c)
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, req.IRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	resp, err := h.service.CreatePlanWithDKD(c.Request.Context(), &req, user, h.db)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *PlanHandler) GetPlan(c *gin.Context) {

@@ -5,6 +5,7 @@ import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import type { Info, Invite, Plan } from '../types/auth'
 import { Edit2, Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { getErrorMessage } from '../services/errors'
 
 interface ListResponse {
   data: Plan[]
@@ -32,6 +33,7 @@ export const KIV = () => {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
 
   const limit = 20
 
@@ -75,6 +77,10 @@ export const KIV = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kiv-plans'] })
       setEditingPlan(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -173,10 +179,13 @@ export const KIV = () => {
       {editingPlan && (
         <UpdateKIVStatusModal
           plan={editingPlan}
-          onClose={() => setEditingPlan(null)}
+          onClose={() => {
+            setEditingPlan(null)
+            setUpdateError(null)
+          }}
           onSubmit={(pipelineStatus) => updateMutation.mutate({ pipeline_status: pipelineStatus })}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update plan' : null}
+          error={updateError}
         />
       )}
     </DashboardLayout>

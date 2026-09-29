@@ -12,11 +12,12 @@ func SetupInviteRoutes(r gin.IRouter, db *pgxpool.Pool, authzService *services.A
 	infoRepo := repository.NewInfoRepository(db)
 	inviteRepo := repository.NewInviteRepository(db)
 	inviteService := services.NewInviteService(inviteRepo, infoRepo)
-	handler := handlers.NewInviteHandler(inviteService, authzService)
+	handler := handlers.NewInviteHandler(inviteService, authzService, db)
 
 	invites := r.Group("/invites")
 	{
 		invites.POST("", handler.CreateInvite)
+		invites.POST("/create-with-dkd", handler.CreateInviteWithDKD)
 		invites.GET("", handler.ListInvites)
 		invites.GET("/:id", handler.GetInvite)
 		invites.PUT("/:id", handler.UpdateInvite)

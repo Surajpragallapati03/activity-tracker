@@ -122,7 +122,7 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 
 	if req.Invites != nil {
 		for _, activity := range req.Invites {
-			err := s.processInvite(ctx, tx, activity, req.Date)
+			err := s.processInvite(ctx, tx, activity, req.Date, currentUser)
 			if err != nil {
 				return nil, err
 			}
@@ -196,10 +196,7 @@ func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, acti
 		return errors.New("missing or invalid prospect_name")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	response := extractOptionalString(data, "response")
 	phone := extractOptionalString(data, "phone")
@@ -291,10 +288,10 @@ func (s *DailyUpdateService) deleteInfoInTx(ctx context.Context, tx pgx.Tx, acti
 	return err
 }
 
-func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string) error {
+func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User) error {
 	switch activity.Action {
 	case "create":
-		return s.createInviteInTx(ctx, tx, activity, dailyUpdateDate)
+		return s.createInviteInTx(ctx, tx, activity, dailyUpdateDate, currentUser)
 	case "update":
 		return s.updateInviteInTx(ctx, tx, activity)
 	case "delete":
@@ -304,22 +301,56 @@ func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activ
 	}
 }
 
-func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string) error {
+func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User) error {
 	data := activity.Data
 
-	infoID, ok := data["info_id"].(string)
-	if !ok {
-		return errors.New("missing or invalid info_id")
+	status := extractOptionalString(data, "status")
+
+	isDKD := false
+	if dkd, ok := data["isDKD"].(bool); ok {
+		isDKD = dkd
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	var infoUUID uuid.UUID
+	var irID string
 
-	infoUUID, err := uuid.Parse(infoID)
-	if err != nil {
-		return fmt.Errorf("invalid info_id")
+	if isDKD {
+		// DKD mode: create Info first with response="A"
+		prospectName, ok := data["prospect_name"].(string)
+		if !ok {
+			return errors.New("missing or invalid prospect_name for DKD")
+		}
+
+		phone := extractOptionalString(data, "phone")
+
+		infoUUID = uuid.New()
+		irID = currentUser.IRID
+
+		infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
+		              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
+
+		_, err := tx.Exec(ctx, infoQuery, infoUUID, irID, prospectName, phone, "A", "", nil, currentUser.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create info in DKD: %w", err)
+		}
+	} else {
+		// Normal mode: use existing info_id
+		infoID, ok := data["info_id"].(string)
+		if !ok {
+			return errors.New("missing or invalid info_id")
+		}
+
+		var err error
+		infoUUID, err = uuid.Parse(infoID)
+		if err != nil {
+			return fmt.Errorf("invalid info_id")
+		}
+
+		// Get ir_id from the info record
+		err = tx.QueryRow(ctx, "SELECT ir_id FROM infos WHERE id = $1", infoUUID).Scan(&irID)
+		if err != nil {
+			return fmt.Errorf("cannot get ir_id from info: %w", err)
+		}
 	}
 
 	var meetingDate *time.Time
@@ -349,18 +380,11 @@ func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, ac
 	mode := extractOptionalString(data, "mode")
 	remarks := extractOptionalString(data, "remarks")
 
-	// Get ir_id from the info record
-	var irID string
-	err = tx.QueryRow(ctx, "SELECT ir_id FROM infos WHERE id = $1", infoUUID).Scan(&irID)
-	if err != nil {
-		return fmt.Errorf("cannot get ir_id from info: %w", err)
-	}
-
 	id := uuid.New()
 	query := `INSERT INTO invites (id, info_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
 
-	_, err = tx.Exec(ctx, query, id, infoUUID, irID, meetingDate, meetingTime, mode, status, remarks)
+	_, err := tx.Exec(ctx, query, id, infoUUID, irID, meetingDate, meetingTime, mode, status, remarks)
 	return err
 }
 
@@ -466,9 +490,9 @@ func (s *DailyUpdateService) processPlan(ctx context.Context, tx pgx.Tx, activit
 func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time) error {
 	data := activity.Data
 
-	inviteID, ok := data["invite_id"].(string)
-	if !ok {
-		return errors.New("missing or invalid invite_id")
+	isDKD := false
+	if dkd, ok := data["isDKD"].(bool); ok {
+		isDKD = dkd
 	}
 
 	ul1, ok := data["ul1"].(string)
@@ -498,26 +522,67 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 		return errors.New("missing or invalid expected_uvs")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	remarks, ok := data["remarks"].(string)
 	if !ok {
 		remarks = ""
 	}
 
-	inviteUUID, err := uuid.Parse(inviteID)
-	if err != nil {
-		return fmt.Errorf("invalid invite_id")
-	}
-
-	// Get ir_id from the invite record
+	var inviteUUID uuid.UUID
 	var irID string
-	err = tx.QueryRow(ctx, "SELECT ir_id FROM invites WHERE id = $1", inviteUUID).Scan(&irID)
-	if err != nil {
-		return fmt.Errorf("cannot get ir_id from invite: %w", err)
+
+	if isDKD {
+		// DKD mode: create Info and Invite first
+		prospectName, ok := data["prospect_name"].(string)
+		if !ok {
+			return errors.New("missing or invalid prospect_name for DKD plan")
+		}
+
+		phone := extractOptionalString(data, "phone")
+
+		// Create Info with response="A"
+		infoID := uuid.New()
+		irID = currentUser.IRID
+		infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
+		              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
+
+		_, err := tx.Exec(ctx, infoQuery, infoID, irID, prospectName, phone, "A", "", nil, currentUser.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create info in DKD plan: %w", err)
+		}
+
+		// Create Invite using the new Info ID
+		inviteUUID = uuid.New()
+		mode := "virtual"
+		if m, ok := data["mode"].(string); ok && m != "" {
+			mode = m
+		}
+		inviteQuery := `INSERT INTO invites (id, info_id, ir_id, mode, status, remarks, created_at, updated_at)
+		               VALUES ($1, $2, $3, $4, $5, $6, now(), now())`
+
+		_, err = tx.Exec(ctx, inviteQuery, inviteUUID, infoID, irID, mode, "", nil)
+		if err != nil {
+			return fmt.Errorf("failed to create invite in DKD plan: %w", err)
+		}
+	} else {
+		// Normal mode: use existing invite_id
+		inviteID, ok := data["invite_id"].(string)
+		if !ok {
+			return errors.New("missing or invalid invite_id")
+		}
+
+		var err error
+		inviteUUID, err = uuid.Parse(inviteID)
+		if err != nil {
+			return fmt.Errorf("invalid invite_id")
+		}
+
+		// Get ir_id from the invite record
+		err = tx.QueryRow(ctx, "SELECT ir_id FROM invites WHERE id = $1", inviteUUID).Scan(&irID)
+		if err != nil {
+			return fmt.Errorf("cannot get ir_id from invite: %w", err)
+		}
 	}
 
 	// New plans always have tentative status
@@ -527,7 +592,7 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 	query := `INSERT INTO plans (id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, pipeline_status, created_at, updated_at)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`
 
-	_, err = tx.Exec(ctx, query, id, inviteUUID, irID, ul1, ul2, quotedAmount, expectedUVs, status, remarks, pipelineStatus, activityDate)
+	_, err := tx.Exec(ctx, query, id, inviteUUID, irID, ul1, ul2, quotedAmount, expectedUVs, status, remarks, pipelineStatus, activityDate)
 	if err != nil {
 		return err
 	}
@@ -644,10 +709,7 @@ func (s *DailyUpdateService) createClosingInTx(ctx context.Context, tx pgx.Tx, a
 		return errors.New("missing or invalid plan_id")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	planUUID, err := uuid.Parse(planID)
 	if err != nil {
@@ -772,10 +834,7 @@ func (s *DailyUpdateService) createFGInviteInTx(ctx context.Context, tx pgx.Tx, 
 		return errors.New("missing or invalid closing_id")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	closingUUID, err := uuid.Parse(closingID)
 	if err != nil {
@@ -941,10 +1000,7 @@ func (s *DailyUpdateService) createFeelGoodInTx(ctx context.Context, tx pgx.Tx, 
 		return errors.New("missing or invalid ul2")
 	}
 
-	status, ok := data["status"].(string)
-	if !ok {
-		return errors.New("missing or invalid status")
-	}
+	status := extractOptionalString(data, "status")
 
 	fgInviteUUID, err := uuid.Parse(fgInviteID)
 	if err != nil {

@@ -12,7 +12,7 @@ type FeelGood struct {
 	IRID       string    `json:"ir_id"`
 	UL1        string    `json:"ul1"`
 	UL2        string    `json:"ul2"`
-	Status     string    `json:"status"`
+	Status     *string   `json:"status"`
 	Remarks    *string   `json:"remarks"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -24,7 +24,7 @@ type FeelGoodResponse struct {
 	IRID       string    `json:"ir_id"`
 	UL1        string    `json:"ul1"`
 	UL2        string    `json:"ul2"`
-	Status     string    `json:"status"`
+	Status     *string   `json:"status"`
 	Remarks    *string   `json:"remarks"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -35,7 +35,7 @@ type CreateFeelGoodRequest struct {
 	IRID       string  `json:"ir_id" binding:"required"`
 	UL1        string  `json:"ul1" binding:"required"`
 	UL2        string  `json:"ul2" binding:"required"`
-	Status     string  `json:"status" binding:"required"`
+	Status     *string `json:"status"`
 	Remarks    *string `json:"remarks"`
 }
 

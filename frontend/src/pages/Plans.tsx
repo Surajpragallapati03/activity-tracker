@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -46,6 +47,9 @@ export const Plans = () => {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
   const [viewingPlan, setViewingPlan] = useState<Plan | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Plan | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -107,12 +111,19 @@ export const Plans = () => {
 
   const createMutation = useMutation({
     mutationFn: async (req: any) => {
-      const res = await api.post<Plan>('/plans', req)
+      const endpoint = req.use_dkd ? '/plans/create-with-dkd' : '/plans'
+      const res = await api.post<Plan>(endpoint, req)
       return res.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
+      queryClient.invalidateQueries({ queryKey: ['infos-for-plan-selector'] })
+      queryClient.invalidateQueries({ queryKey: ['invites-for-plan-selector'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -124,6 +135,10 @@ export const Plans = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       setEditingPlan(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -134,6 +149,10 @@ export const Plans = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -408,10 +427,13 @@ export const Plans = () => {
 
       {isCreateOpen && (
         <CreatePlanModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create plan' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           invites={allInvites || []}
           infos={allInfos || []}
@@ -433,10 +455,13 @@ export const Plans = () => {
           plan={editingPlan}
           invite={allInvites?.find((i) => i.id === editingPlan.invite_id)}
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === editingPlan.invite_id)?.info_id)}
-          onClose={() => setEditingPlan(null)}
+          onClose={() => {
+            setEditingPlan(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update plan' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           currentUser={currentUser}
         />
@@ -445,10 +470,13 @@ export const Plans = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === deleteConfirm.invite_id)?.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete plan' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
@@ -465,7 +493,7 @@ interface ViewPlanModalProps {
 const ViewPlanModal = ({ plan, info, onClose }: ViewPlanModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Plan Details</h3>
         </div>
@@ -544,9 +572,14 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>(currentUser?.id || '')
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false)
   const [ownerSearchInput, setOwnerSearchInput] = useState('')
+  const [useDKD, setUseDKD] = useState(false)
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState({
     invite_id: '',
+    prospect_name: '',
+    phone: '',
+    info_status: '',
+    mode: 'virtual',
     ul1: '',
     ul2: '',
     quoted_amount: '',
@@ -620,26 +653,49 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
 
   const handleOwnerSelect = (userId: string) => {
     setSelectedOwnerId(userId)
-    setForm({ ...form, invite_id: '' })
+    setForm({ ...form, invite_id: '', prospect_name: '', phone: '', info_status: '' })
     setShowOwnerDropdown(false)
     setOwnerSearchInput('')
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedOwnerUser || !form.invite_id) return
-    const submitData = {
-      ir_id: selectedOwnerUser.ir_id,
-      invite_id: form.invite_id,
-      ul1: form.ul1,
-      ul2: form.ul2,
-      quoted_amount: form.quoted_amount || '',
-      expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
-      status: form.status,
-      remarks: form.remarks || '',
-      pipeline_status: form.pipeline_status,
+    if (!selectedOwnerUser) return
+
+    if (useDKD) {
+      if (!form.prospect_name) return
+      const submitData = {
+        use_dkd: true,
+        ir_id: selectedOwnerUser.ir_id,
+        prospect_name: form.prospect_name,
+        phone: form.phone || null,
+        info_status: '',
+        mode: form.mode || 'virtual',
+        ul1: form.ul1,
+        ul2: form.ul2,
+        quoted_amount: form.quoted_amount || '',
+        expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
+        status: form.status,
+        remarks: form.remarks || undefined,
+        pipeline_status: form.pipeline_status,
+      }
+      onSubmit(submitData)
+    } else {
+      if (!form.invite_id) return
+      const submitData = {
+        use_dkd: false,
+        ir_id: selectedOwnerUser.ir_id,
+        invite_id: form.invite_id,
+        ul1: form.ul1,
+        ul2: form.ul2,
+        quoted_amount: form.quoted_amount || '',
+        expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : 0,
+        status: form.status,
+        remarks: form.remarks || '',
+        pipeline_status: form.pipeline_status,
+      }
+      onSubmit(submitData)
     }
-    onSubmit(submitData)
   }
 
   return (
@@ -702,25 +758,82 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
 
             {isOwnerSelected && (
               <>
-                <div>
-                  <label className="label">Invite *</label>
-                  <select
-                    required
-                    value={form.invite_id}
-                    onChange={(e) => setForm({ ...form, invite_id: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">Select Invite</option>
-                    {availableInvites.map((invite) => {
-                      const info = infos?.find((i) => i.id === invite.info_id)
-                      return (
-                        <option key={invite.id} value={invite.id}>
-                          {info?.prospect_name || 'Unknown'} ({info?.phone || 'N/A'})
-                        </option>
-                      )
-                    })}
-                  </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="use-dkd"
+                    checked={useDKD}
+                    onChange={(e) => {
+                      setUseDKD(e.target.checked)
+                      if (e.target.checked) {
+                        setForm({ ...form, invite_id: '', prospect_name: '', phone: '', info_status: '' })
+                      } else {
+                        setForm({ ...form, prospect_name: '', phone: '', info_status: '' })
+                      }
+                    }}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="use-dkd" className="label cursor-pointer">
+                    Create with DKD (Info + Invite)
+                  </label>
                 </div>
+
+                {useDKD ? (
+                  <>
+                    <div>
+                      <label className="label">Prospect Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={form.prospect_name}
+                        onChange={(e) => setForm({ ...form, prospect_name: e.target.value })}
+                        className="input"
+                        placeholder="Prospect name"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Phone</label>
+                      <input
+                        type="text"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="input"
+                        placeholder="Phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Mode</label>
+                      <select
+                        value={form.mode}
+                        onChange={(e) => setForm({ ...form, mode: e.target.value })}
+                        className="input"
+                      >
+                        <option value="virtual">Virtual</option>
+                        <option value="physical">Physical</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="label">Invite *</label>
+                    <select
+                      required
+                      value={form.invite_id}
+                      onChange={(e) => setForm({ ...form, invite_id: e.target.value })}
+                      className="input"
+                    >
+                      <option value="">Select Invite</option>
+                      {availableInvites.map((invite) => {
+                        const info = infos?.find((i) => i.id === invite.info_id)
+                        return (
+                          <option key={invite.id} value={invite.id}>
+                            {info?.prospect_name || 'Unknown'} ({info?.phone || 'N/A'})
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="label">UL1 *</label>
                   <input
@@ -766,10 +879,10 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -791,9 +904,8 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                   </select>
                 </div>
                 <div>
-                  <label className="label">Remarks *</label>
+                  <label className="label">Remarks</label>
                   <textarea
-                    required
                     value={form.remarks}
                     onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                     className="input"
@@ -907,10 +1019,10 @@ const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, curre
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
@@ -982,7 +1094,7 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Plan</h3>
         </div>

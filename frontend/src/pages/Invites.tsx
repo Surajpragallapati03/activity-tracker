@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -44,6 +45,9 @@ export const Invites = () => {
   const [editingInvite, setEditingInvite] = useState<Invite | null>(null)
   const [viewingInvite, setViewingInvite] = useState<Invite | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Invite | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -95,12 +99,18 @@ export const Invites = () => {
 
   const createMutation = useMutation({
     mutationFn: async (req: any) => {
-      const res = await api.post<Invite>('/invites', req)
+      const endpoint = req.use_dkd ? '/invites/create-with-dkd' : '/invites'
+      const res = await api.post<Invite>(endpoint, req)
       return res.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invites'] })
+      queryClient.invalidateQueries({ queryKey: ['infos-for-invite-selector'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -112,6 +122,10 @@ export const Invites = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invites'] })
       setEditingInvite(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -122,6 +136,10 @@ export const Invites = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invites'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -393,10 +411,13 @@ export const Invites = () => {
 
       {isCreateOpen && (
         <CreateInviteModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create invite' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           infos={allInfos || []}
           currentUser={currentUser}
@@ -414,10 +435,13 @@ export const Invites = () => {
       {editingInvite && (
         <EditInviteModal
           invite={editingInvite}
-          onClose={() => setEditingInvite(null)}
+          onClose={() => {
+            setEditingInvite(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update invite' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           infos={allInfos || []}
           currentUser={currentUser}
@@ -427,10 +451,13 @@ export const Invites = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === deleteConfirm.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete invite' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
@@ -446,7 +473,7 @@ interface ViewInviteModalProps {
 const ViewInviteModal = ({ invite, info, onClose }: ViewInviteModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Invite Details</h3>
         </div>
@@ -516,9 +543,13 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>(currentUser?.id || '')
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false)
   const [ownerSearchInput, setOwnerSearchInput] = useState('')
+  const [useDKD, setUseDKD] = useState(false)
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState({
     info_id: '',
+    prospect_name: '',
+    phone: '',
+    info_status: '',
     meeting_date: '',
     meeting_time: '',
     mode: 'virtual',
@@ -581,7 +612,7 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
 
   const handleOwnerSelect = (userId: string) => {
     setSelectedOwnerId(userId)
-    setForm({ ...form, info_id: '' })
+    setForm({ ...form, info_id: '', prospect_name: '', phone: '', info_status: '' })
     setShowOwnerDropdown(false)
     setOwnerSearchInput('')
   }
@@ -589,14 +620,34 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedOwnerUser) return
-    const submitData = {
-      ir_id: selectedOwnerUser.ir_id,
-      ...form,
-      meeting_date: form.meeting_date || undefined,
-      meeting_time: toApiTime(form.meeting_time),
-      remarks: form.remarks || undefined,
+
+    if (useDKD) {
+      if (!form.prospect_name) return
+      const submitData = {
+        use_dkd: true,
+        ir_id: selectedOwnerUser.ir_id,
+        prospect_name: form.prospect_name,
+        phone: form.phone || null,
+        info_status: '',
+        mode: form.mode || 'virtual',
+        meeting_date: form.meeting_date || undefined,
+        meeting_time: toApiTime(form.meeting_time),
+        status: form.status,
+        remarks: form.remarks || undefined,
+      }
+      onSubmit(submitData)
+    } else {
+      if (!form.info_id) return
+      const submitData = {
+        use_dkd: false,
+        ir_id: selectedOwnerUser.ir_id,
+        ...form,
+        meeting_date: form.meeting_date || undefined,
+        meeting_time: toApiTime(form.meeting_time),
+        remarks: form.remarks || undefined,
+      }
+      onSubmit(submitData)
     }
-    onSubmit(submitData)
   }
 
   return (
@@ -659,22 +710,68 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
 
             {isOwnerSelected && (
               <>
-                <div>
-                  <label className="label">Info *</label>
-                  <select
-                    required
-                    value={form.info_id}
-                    onChange={(e) => setForm({ ...form, info_id: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">Select Info</option>
-                    {availableInfos.map((info) => (
-                      <option key={info.id} value={info.id}>
-                        {info.prospect_name} ({info.phone})
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="use-dkd"
+                    checked={useDKD}
+                    onChange={(e) => {
+                      setUseDKD(e.target.checked)
+                      if (e.target.checked) {
+                        setForm({ ...form, info_id: '', prospect_name: '', phone: '', info_status: '' })
+                      } else {
+                        setForm({ ...form, prospect_name: '', phone: '', info_status: '' })
+                      }
+                    }}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="use-dkd" className="label cursor-pointer">
+                    Create with DKD (Info + Invite)
+                  </label>
                 </div>
+
+                {useDKD ? (
+                  <>
+                    <div>
+                      <label className="label">Prospect Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={form.prospect_name}
+                        onChange={(e) => setForm({ ...form, prospect_name: e.target.value })}
+                        className="input"
+                        placeholder="Prospect name"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Phone</label>
+                      <input
+                        type="text"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="input"
+                        placeholder="Phone number"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="label">Info *</label>
+                    <select
+                      required
+                      value={form.info_id}
+                      onChange={(e) => setForm({ ...form, info_id: e.target.value })}
+                      className="input"
+                    >
+                      <option value="">Select Info</option>
+                      {availableInfos.map((info) => (
+                        <option key={info.id} value={info.id}>
+                          {info.prospect_name} ({info.phone})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="label">Mode *</label>
                   <select
@@ -706,10 +803,10 @@ const CreateInviteModal = ({ onClose, onSubmit, isLoading, error, users, infos, 
                   />
                 </div>
                 <div>
-                  <label className="label">Status *</label>
+                  <label className="label">Status</label>
                   <input
                     type="text"
-                    required
+                    
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="input"
@@ -834,10 +931,10 @@ const EditInviteModal = ({ invite, onClose, onSubmit, isLoading, error, users, i
               />
             </div>
             <div>
-              <label className="label">Status *</label>
+              <label className="label">Status</label>
               <input
                 type="text"
-                required
+                
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="input"
@@ -895,7 +992,7 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ info, onCancel, onConfirm, isLoading, error }: DeleteConfirmModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete Invite</h3>
         </div>

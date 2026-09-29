@@ -5,6 +5,7 @@ import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import type { User } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { getErrorMessage } from '../services/errors'
 
 interface ListResponse {
   data: User[]
@@ -22,6 +23,9 @@ export const Users = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [viewingUser, setViewingUser] = useState<User | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
 
@@ -43,6 +47,10 @@ export const Users = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -54,6 +62,10 @@ export const Users = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       setEditingUser(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -64,11 +76,10 @@ export const Users = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
     },
-    onError: (error: any) => {
-      if (error.response?.data?.error) {
-        // Error message from backend
-      }
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -258,10 +269,13 @@ export const Users = () => {
 
       {isCreateOpen && (
         <CreateUserModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create user' : null}
+          error={createError}
         />
       )}
 
@@ -275,20 +289,26 @@ export const Users = () => {
       {editingUser && (
         <EditUserModal
           user={editingUser}
-          onClose={() => setEditingUser(null)}
+          onClose={() => {
+            setEditingUser(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update user' : null}
+          error={updateError}
         />
       )}
 
       {deleteConfirm && (
         <DeleteConfirmModal
           user={deleteConfirm}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete user' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
@@ -303,7 +323,7 @@ interface ViewUserModalProps {
 const ViewUserModal = ({ user, onClose }: ViewUserModalProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">User Details</h3>
         </div>
@@ -415,7 +435,7 @@ const CreateUserModal = ({ onClose, onSubmit, isLoading, error }: CreateUserModa
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Create User</h3>
         </div>
@@ -611,7 +631,7 @@ const EditUserModal = ({ user, onClose, onSubmit, isLoading, error }: EditUserMo
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit User</h3>
         </div>
@@ -759,7 +779,7 @@ const DeleteConfirmModal = ({ user, onCancel, onConfirm, isLoading, error }: Del
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="card-header">
           <h3 className="text-lg font-semibold text-red-600">Delete User</h3>
         </div>

@@ -6,6 +6,7 @@ import api from '../services/api'
 import type { User } from '../types/auth'
 import { Loader2, Edit2, Users, TrendingUp, Target } from 'lucide-react'
 import { PasswordChangeModal } from '../components/PasswordChangeModal'
+import { getErrorMessage } from '../services/errors'
 
 interface ListResponse {
   data: User[]
@@ -180,6 +181,7 @@ const EditProfileModal = ({ user, onClose, onSuccess }: EditProfileModalProps) =
     phone: user.phone,
     status: user.status || '',
   })
+  const [updateError, setUpdateError] = useState<string | null>(null)
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -188,7 +190,11 @@ const EditProfileModal = ({ user, onClose, onSuccess }: EditProfileModalProps) =
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
+      setUpdateError(null)
       onSuccess()
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -205,8 +211,8 @@ const EditProfileModal = ({ user, onClose, onSuccess }: EditProfileModalProps) =
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
-            {updateMutation.isError && (
-              <div className="text-red-600 dark:text-red-400 text-sm">Failed to update profile</div>
+            {updateError && (
+              <div className="text-red-600 dark:text-red-400 text-sm">{updateError}</div>
             )}
             <div>
               <label className="label">Name *</label>
@@ -250,7 +256,14 @@ const EditProfileModal = ({ user, onClose, onSuccess }: EditProfileModalProps) =
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
-            <button type="button" onClick={onClose} className="btn-secondary">
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                setUpdateError(null)
+              }}
+              className="btn-secondary"
+            >
               Cancel
             </button>
             <button type="submit" disabled={updateMutation.isPending} className="btn-primary">

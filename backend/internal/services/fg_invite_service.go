@@ -229,9 +229,6 @@ func (s *FGInviteService) validateCreateRequest(ctx context.Context, req *models
 		return errors.New("invalid closing_id format")
 	}
 
-	if req.Status == "" {
-		return errors.New("status is required")
-	}
 
 	closingID, _ := uuid.Parse(req.ClosingID)
 	_, err := s.closingRepo.GetByID(ctx, closingID)
@@ -269,16 +266,6 @@ func (s *FGInviteService) validateCreateRequest(ctx context.Context, req *models
 	return nil
 }
 
-func normalizeString(s *string) *string {
-	if s == nil {
-		return nil
-	}
-	trimmed := strings.TrimSpace(*s)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
-}
 
 func isValidTime(timeStr string) bool {
 	pattern := `^\d{2}:\d{2}:\d{2}$`
