@@ -93,7 +93,7 @@ func (s *UserService) CreateUserWithPromotion(ctx context.Context, creator *mode
 		// Non-admin users can only create under themselves or their downlines
 		if creator.Role != "admin" {
 			if !s.canUseAsUpline(ctx, creator.ID, *req.UplineID) {
-				return nil, fmt.Errorf("forbidden")
+				return nil, fmt.Errorf("cannot create user under this upline: you can only create users under yourself or your downlines")
 			}
 		}
 	}

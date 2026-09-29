@@ -111,10 +111,13 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// Non-admin users cannot change upline_id of their downlines
+	// Non-admin users cannot change upline_id
 	if currentUser.Role != "admin" && req.UplineID != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non-admin users cannot change upline"})
-		return
+		// Only reject if upline_id is actually changing
+		if targetUser.UplineID == nil || *req.UplineID != *targetUser.UplineID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non-admin users cannot change upline"})
+			return
+		}
 	}
 
 	user, err := h.service.UpdateUser(c.Request.Context(), id, &req)
