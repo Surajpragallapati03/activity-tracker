@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { Info, Invite, Plan, Closing, FGInvite, FeelGood } from '../types/auth'
 import { Plus, Save, Loader2, AlertCircle, ChevronDown, Edit2, Trash2, Check, X } from 'lucide-react'
 
@@ -51,6 +52,7 @@ export const DailyUpdates = () => {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['infos', 'invites', 'plans', 'closings', 'fg_invites', 'feel_goods']))
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const { data: dailyUpdate, isLoading, error } = useQuery({
     queryKey: ['daily-updates', selectedDate],
@@ -150,6 +152,10 @@ export const DailyUpdates = () => {
       setChanges(new Map())
       setDeletedIds(new Set())
       setEditingId(null)
+      setSaveError(null)
+    },
+    onError: (error) => {
+      setSaveError(getErrorMessage(error))
     },
   })
 
@@ -557,25 +563,34 @@ export const DailyUpdates = () => {
             })}
 
             {(changes.size > 0 || deletedIds.size > 0) && (
-              <div className="mt-8 flex gap-3">
-                <button
-                  onClick={() => {
-                    setChanges(new Map())
-                    setDeletedIds(new Set())
-                    queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
-                  }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => saveMutation.mutate()}
-                  disabled={saveMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
-                >
-                  {saveMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  Save Daily Updates
-                </button>
+              <div className="mt-8 space-y-3">
+                {saveError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
+                    <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" size={18} />
+                    <p className="text-red-700 dark:text-red-300 text-sm">{saveError}</p>
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setChanges(new Map())
+                      setDeletedIds(new Set())
+                      setSaveError(null)
+                      queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
+                    }}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => saveMutation.mutate()}
+                    disabled={saveMutation.isPending}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                  >
+                    {saveMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    Save Daily Updates
+                  </button>
+                </div>
               </div>
             )}
           </>

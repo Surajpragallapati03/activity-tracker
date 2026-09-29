@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -32,6 +33,9 @@ export const Infos = () => {
   const [editingInfo, setEditingInfo] = useState<Info | null>(null)
   const [viewingInfo, setViewingInfo] = useState<Info | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Info | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -79,6 +83,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -90,6 +98,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setEditingInfo(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -100,6 +112,10 @@ export const Infos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infos'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -370,10 +386,13 @@ export const Infos = () => {
 
       {isCreateOpen && (
         <CreateInfoModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create info' : null}
+          error={createError}
           users={getUsersForIRSelector}
           currentUser={currentUser}
         />
@@ -389,10 +408,13 @@ export const Infos = () => {
       {editingInfo && (
         <EditInfoModal
           info={editingInfo}
-          onClose={() => setEditingInfo(null)}
+          onClose={() => {
+            setEditingInfo(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update info' : null}
+          error={updateError}
           users={getUsersForIRSelector}
         />
       )}
@@ -400,10 +422,13 @@ export const Infos = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={deleteConfirm}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete info' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>

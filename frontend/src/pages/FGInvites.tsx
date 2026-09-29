@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan, Closing, FGInvite } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -65,6 +66,9 @@ export const FGInvites = () => {
   const [editingFGInvite, setEditingFGInvite] = useState<FGInvite | null>(null)
   const [viewingFGInvite, setViewingFGInvite] = useState<FGInvite | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<FGInvite | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -152,6 +156,10 @@ export const FGInvites = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fg-invites'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -163,6 +171,10 @@ export const FGInvites = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fg-invites'] })
       setEditingFGInvite(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -173,6 +185,10 @@ export const FGInvites = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fg-invites'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -447,10 +463,13 @@ export const FGInvites = () => {
 
       {isCreateOpen && (
         <CreateFGInviteModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create FG invite' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           closings={allClosings || []}
           plans={allPlans || []}
@@ -478,10 +497,13 @@ export const FGInvites = () => {
           plan={allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === editingFGInvite.closing_id)?.plan_id)}
           invite={allInvites?.find((i) => i.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === editingFGInvite.closing_id)?.plan_id)?.invite_id)}
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === editingFGInvite.closing_id)?.plan_id)?.invite_id)?.info_id)}
-          onClose={() => setEditingFGInvite(null)}
+          onClose={() => {
+            setEditingFGInvite(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update FG invite' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           currentUser={currentUser}
         />
@@ -490,10 +512,13 @@ export const FGInvites = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === deleteConfirm.closing_id)?.plan_id)?.invite_id)?.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete FG invite' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>

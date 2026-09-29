@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import api from '../services/api'
 import { Eye, EyeOff } from 'lucide-react'
+import { getErrorMessage } from '../services/errors'
 
 interface PasswordChangeModalProps {
   onClose: () => void
@@ -18,6 +19,7 @@ export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModa
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [validationError, setValidationError] = useState('')
+  const [updateError, setUpdateError] = useState<string | null>(null)
 
   const isSetPassword = !hasPassword
   const endpoint = isSetPassword ? '/profile/set-password' : '/profile/change-password'
@@ -39,7 +41,11 @@ export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModa
       return res.data
     },
     onSuccess: () => {
+      setUpdateError(null)
       onClose()
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -70,11 +76,9 @@ export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModa
         </div>
         <form onSubmit={handleSubmit}>
           <div className="card-content space-y-4">
-            {(mutation.isError || validationError) && (
+            {(updateError || validationError) && (
               <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950 p-3 rounded">
-                {validationError ||
-                  (mutation.error as any)?.response?.data?.error ||
-                  'Failed to update password'}
+                {validationError || updateError}
               </div>
             )}
 
@@ -159,7 +163,14 @@ export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModa
             </div>
           </div>
           <div className="card-footer flex gap-3 justify-end">
-            <button type="button" onClick={onClose} className="btn-secondary">
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                setUpdateError(null)
+              }}
+              className="btn-secondary"
+            >
               Cancel
             </button>
             <button

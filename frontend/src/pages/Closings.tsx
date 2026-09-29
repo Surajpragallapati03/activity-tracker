@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan, Closing } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -53,6 +54,9 @@ export const Closings = () => {
   const [editingClosing, setEditingClosing] = useState<Closing | null>(null)
   const [viewingClosing, setViewingClosing] = useState<Closing | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Closing | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -130,6 +134,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -141,6 +149,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setEditingClosing(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -151,6 +163,10 @@ export const Closings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['closings'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -420,10 +436,13 @@ export const Closings = () => {
 
       {isCreateOpen && (
         <CreateClosingModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create closing' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           plans={allPlans || []}
           invites={allInvites || []}
@@ -448,10 +467,13 @@ export const Closings = () => {
           plan={allPlans?.find((p) => p.id === editingClosing.plan_id)}
           invite={allInvites?.find((i) => i.id === allPlans?.find((p) => p.id === editingClosing.plan_id)?.invite_id)}
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === editingClosing.plan_id)?.invite_id)?.info_id)}
-          onClose={() => setEditingClosing(null)}
+          onClose={() => {
+            setEditingClosing(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update closing' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           currentUser={currentUser}
         />
@@ -460,10 +482,13 @@ export const Closings = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === deleteConfirm.plan_id)?.invite_id)?.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete closing' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>

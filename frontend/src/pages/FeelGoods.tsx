@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan, Closing, FGInvite, FeelGood } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 
@@ -67,6 +68,9 @@ export const FeelGoods = () => {
   const [editingFeelGood, setEditingFeelGood] = useState<FeelGood | null>(null)
   const [viewingFeelGood, setViewingFeelGood] = useState<FeelGood | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<FeelGood | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -164,6 +168,10 @@ export const FeelGoods = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feel-goods'] })
       setIsCreateOpen(false)
+      setCreateError(null)
+    },
+    onError: (error) => {
+      setCreateError(getErrorMessage(error))
     },
   })
 
@@ -175,6 +183,10 @@ export const FeelGoods = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feel-goods'] })
       setEditingFeelGood(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
     },
   })
 
@@ -185,6 +197,10 @@ export const FeelGoods = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feel-goods'] })
       setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error))
     },
   })
 
@@ -458,10 +474,13 @@ export const FeelGoods = () => {
 
       {isCreateOpen && (
         <CreateFeelGoodModal
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => {
+            setIsCreateOpen(false)
+            setCreateError(null)
+          }}
           onSubmit={(data) => createMutation.mutate(data)}
           isLoading={createMutation.isPending}
-          error={createMutation.isError ? 'Failed to create feel good' : null}
+          error={createError}
           users={getOwnersForActivitySelector}
           fgInvites={allFGInvites || []}
           closings={allClosings || []}
@@ -492,10 +511,13 @@ export const FeelGoods = () => {
           plan={allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === allFGInvites?.find((f) => f.id === editingFeelGood.fg_invite_id)?.closing_id)?.plan_id)}
           invite={allInvites?.find((i) => i.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === allFGInvites?.find((f) => f.id === editingFeelGood.fg_invite_id)?.closing_id)?.plan_id)?.invite_id)}
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === allFGInvites?.find((f) => f.id === editingFeelGood.fg_invite_id)?.closing_id)?.plan_id)?.invite_id)?.info_id)}
-          onClose={() => setEditingFeelGood(null)}
+          onClose={() => {
+            setEditingFeelGood(null)
+            setUpdateError(null)
+          }}
           onSubmit={(data) => updateMutation.mutate(data)}
           isLoading={updateMutation.isPending}
-          error={updateMutation.isError ? 'Failed to update feel good' : null}
+          error={updateError}
           users={getOwnersForActivitySelector}
           currentUser={currentUser}
         />
@@ -504,10 +526,13 @@ export const FeelGoods = () => {
       {deleteConfirm && (
         <DeleteConfirmModal
           info={allInfos?.find((i) => i.id === allInvites?.find((inv) => inv.id === allPlans?.find((p) => p.id === allClosings?.find((c) => c.id === allFGInvites?.find((f) => f.id === deleteConfirm.fg_invite_id)?.closing_id)?.plan_id)?.invite_id)?.info_id)}
-          onCancel={() => setDeleteConfirm(null)}
+          onCancel={() => {
+            setDeleteConfirm(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           isLoading={deleteMutation.isPending}
-          error={deleteMutation.isError ? 'Failed to delete feel good' : null}
+          error={deleteError}
         />
       )}
     </DashboardLayout>
