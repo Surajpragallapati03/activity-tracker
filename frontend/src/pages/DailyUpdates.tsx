@@ -111,11 +111,9 @@ export const DailyUpdates = () => {
   const allFGInvites = allFGInvitesRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
 
   // Activity progression: filter to show only prospects eligible for the next step
-  const inviteInfoIds = new Set(allInvites.map((inv: any) => inv.info_id))
-  const availableInfosForInvites = allInfos.filter((info: any) => !inviteInfoIds.has(info.id))
+  const inviteInfoIds = new Set<string>(allInvites.map((inv: any) => inv.info_id))
 
-  const planInviteIds = new Set(allPlans.map((plan: any) => plan.invite_id))
-  const availableInvitesForPlans = allInvites.filter((invite: any) => !planInviteIds.has(invite.id))
+  const planInviteIds = new Set<string>(allPlans.map((plan: any) => plan.invite_id))
 
   const closingPlanIds = new Set(allClosings.map((closing: any) => closing.plan_id))
   const availablePlansForClosings = allPlans.filter((plan: any) => !closingPlanIds.has(plan.id))
@@ -143,7 +141,6 @@ export const DailyUpdates = () => {
         }
       })
 
-      console.log('Daily Updates Request:', request)
       const res = await api.post<DailyUpdateResponse>('/daily-updates', request)
       return res.data
     },
@@ -343,7 +340,7 @@ export const DailyUpdates = () => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-            <p className="text-red-700 dark:text-red-200">{error instanceof Error ? error.message : 'Error loading data'}</p>
+            <p className="text-red-700 dark:text-red-200">{getErrorMessage(error)}</p>
           </div>
         )}
 
@@ -407,7 +404,8 @@ export const DailyUpdates = () => {
                 <InviteTableRow
                   key={changeKey}
                   invite={activity}
-                  prospects={availableInfosForInvites}
+                  prospects={allInfos}
+                  usedProspectIds={inviteInfoIds}
                   isEditing={isEditing}
                   defaultMeetingDate={selectedDate}
                   getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
@@ -442,8 +440,9 @@ export const DailyUpdates = () => {
                 <PlanTableRow
                   key={changeKey}
                   plan={activity}
-                  invites={availableInvitesForPlans}
+                  invites={allInvites}
                   prospects={allInfos}
+                  usedInviteIds={planInviteIds}
                   isEditing={isEditing}
                   getFieldValue={(field, fallback) => getFieldValue(changeKey, field, fallback)}
                   onEdit={() => setEditingId(changeKey)}
@@ -721,6 +720,7 @@ const InfoTableRow = ({ info, isEditing, getFieldValue, onEdit, onCancel, onSave
 interface InviteTableRowProps {
   invite: Invite
   prospects: Info[]
+  usedProspectIds: Set<string>
   isEditing: boolean
   defaultMeetingDate?: string
   getFieldValue: (field: string, fallback?: any) => any
@@ -732,7 +732,7 @@ interface InviteTableRowProps {
   isDKD?: boolean
 }
 
-const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
+const InviteTableRow = ({ invite, prospects, usedProspectIds, isEditing, defaultMeetingDate, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: InviteTableRowProps) => {
   const isDKD = getFieldValue('isDKD', false)
 
   const getProspectName = () => {
@@ -782,7 +782,7 @@ const InviteTableRow = ({ invite, prospects, isEditing, defaultMeetingDate, getF
                 className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
               >
                 <option value="">Select Prospect *</option>
-                {prospects.map((p) => (
+                {prospects.filter((p) => !usedProspectIds.has(p.id) || getFieldValue('info_id', null) === p.id).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.prospect_name}
                   </option>
@@ -900,6 +900,7 @@ interface PlanTableRowProps {
   plan: Plan
   invites: Invite[]
   prospects: Info[]
+  usedInviteIds: Set<string>
   isEditing: boolean
   getFieldValue: (field: string, fallback?: any) => any
   onEdit: () => void
@@ -910,7 +911,7 @@ interface PlanTableRowProps {
   isDKD?: boolean
 }
 
-const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
+const PlanTableRow = ({ plan, invites, prospects, usedInviteIds, isEditing, getFieldValue, onEdit, onCancel, onSave, onFieldChange, onDelete }: PlanTableRowProps) => {
   const isDKD = getFieldValue('isDKD', false)
 
   const getProspectName = () => {
@@ -961,7 +962,7 @@ const PlanTableRow = ({ plan, invites, prospects, isEditing, getFieldValue, onEd
                 className="w-full px-2 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
               >
                 <option value="">Select Invite *</option>
-                {invites.map((inv) => {
+                {invites.filter((inv) => !usedInviteIds.has(inv.id) || getFieldValue('invite_id', null) === inv.id).map((inv) => {
                   const prospect = prospects.find((p) => p.id === inv.info_id)
                   return (
                     <option key={inv.id} value={inv.id}>
