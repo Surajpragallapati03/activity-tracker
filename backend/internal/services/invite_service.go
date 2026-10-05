@@ -191,6 +191,28 @@ func (s *InviteService) ListInvites(ctx context.Context, query *models.ListInvit
 }
 
 func (s *InviteService) CreateInviteWithDKD(ctx context.Context, req *models.CreateInviteWithDKDRequest, currentUser *models.User, db *pgxpool.Pool) (*models.InviteWithInfoResponse, error) {
+	// Parse and validate meeting date/time
+	normalizedMeetingDate := normalizeOptionalString(req.MeetingDate)
+	normalizedMeetingTime := normalizeOptionalString(req.MeetingTime)
+
+	var meetingDatePtr *time.Time
+	if normalizedMeetingDate != nil {
+		if err := validateDateFormat(*normalizedMeetingDate); err != nil {
+			return nil, err
+		}
+		date, _ := time.Parse("2006-01-02", *normalizedMeetingDate)
+		meetingDatePtr = &date
+	}
+
+	var meetingTimePtr *time.Time
+	if normalizedMeetingTime != nil {
+		if err := validateTimeFormat(*normalizedMeetingTime); err != nil {
+			return nil, err
+		}
+		parsedTime, _ := time.Parse("15:04:05", *normalizedMeetingTime)
+		meetingTimePtr = &parsedTime
+	}
+
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
@@ -214,9 +236,9 @@ func (s *InviteService) CreateInviteWithDKD(ctx context.Context, req *models.Cre
 		mode = *req.Mode
 	}
 
-	inviteQuery := `INSERT INTO invites (id, info_id, ir_id, mode, status, remarks, created_at, updated_at)
-	               VALUES ($1, $2, $3, $4, $5, $6, now(), now())`
-	_, err = tx.Exec(ctx, inviteQuery, inviteID, infoID, req.IRID, mode, req.Status, nil)
+	inviteQuery := `INSERT INTO invites (id, info_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at)
+	               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
+	_, err = tx.Exec(ctx, inviteQuery, inviteID, infoID, req.IRID, meetingDatePtr, meetingTimePtr, mode, req.Status, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invite: %v", err)
 	}
