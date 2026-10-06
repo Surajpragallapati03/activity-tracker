@@ -17,6 +17,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
     { href: '/users', label: 'Users', icon: Users },
     { href: '/infos', label: 'Infos', icon: FileText },
     { href: '/daily-updates', label: 'Daily Updates', icon: Clock },
+    { href: '/plan-scheduler', label: 'Plan Scheduler', icon: Calendar },
     { href: '/pipeline-updates', label: 'Pipeline Updates', icon: TrendingUp },
     { href: '/kiv', label: 'KIV', icon: Bookmark },
     { href: '/reports', label: 'Reports', icon: BarChart3 },

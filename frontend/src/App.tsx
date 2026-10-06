@@ -12,6 +12,7 @@ import { DailyUpdates } from './pages/DailyUpdates'
 import { PipelineUpdates } from './pages/PipelineUpdates'
 import { KIV } from './pages/KIV'
 import { Reports } from './pages/Reports'
+import { PlanScheduler } from './pages/PlanScheduler'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 import { useOAuthCallback } from './hooks/useOAuthCallback'
@@ -132,6 +133,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/plan-scheduler"
+        element={
+          <ProtectedRoute>
+            <PlanScheduler />
           </ProtectedRoute>
         }
       />
