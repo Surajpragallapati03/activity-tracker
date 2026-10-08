@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import { useAuth } from '../hooks/useAuth'
-import { User, Download } from 'lucide-react'
+import { useTelegramPipelineMessage } from '../hooks/useTelegramPipelineMessage'
+import { User, Download, Copy, Share2 } from 'lucide-react'
 import type { User as UserType } from '../types/auth'
 
 interface ActivityCounts {
@@ -223,7 +224,7 @@ export const Reports = () => {
     return new Date().toISOString().split('T')[0]
   }
 
-  const handleExportIndividual = async (format: 'excel' | 'csv' | 'pdf') => {
+  const handleExportIndividual = async (format: 'excel' | 'csv') => {
     if (!individualReport) return
 
     setExportLoading(format)
@@ -249,7 +250,7 @@ export const Reports = () => {
     }
   }
 
-  const handleExportTeam = async (format: 'excel' | 'csv' | 'pdf') => {
+  const handleExportTeam = async (format: 'excel' | 'csv') => {
     if (!teamReport) return
 
     setExportLoading(format)
@@ -282,9 +283,9 @@ export const Reports = () => {
     </div>
   )
 
-  const ExportButtons = ({ onExport }: { onExport: (format: 'excel' | 'csv' | 'pdf') => void }) => (
+  const ExportButtons = ({ onExport }: { onExport: (format: 'excel' | 'csv') => void }) => (
     <div className="flex gap-2 flex-wrap">
-      {(['excel', 'csv', 'pdf'] as const).map(format => (
+      {(['excel', 'csv'] as const).map(format => (
         <button
           key={format}
           onClick={() => onExport(format)}
@@ -340,6 +341,43 @@ export const Reports = () => {
       )}
     </div>
   )
+
+  const individualPipelineData = useMemo(() => {
+    if (!individualReport) return null
+    return {
+      sureshot: individualReport.sureshot_details,
+      strong: individualReport.strong_details,
+      tentative: individualReport.tentative_details,
+    }
+  }, [individualReport])
+
+  const teamPipelineData = useMemo(() => {
+    if (!teamReport) return null
+    const aggregated = {
+      sureshot: [] as PipelineDetail[],
+      strong: [] as PipelineDetail[],
+      tentative: [] as PipelineDetail[],
+    }
+    teamReport.pipeline_details.forEach((pipeline) => {
+      aggregated.sureshot.push(...pipeline.sureshot_details)
+      aggregated.strong.push(...pipeline.strong_details)
+      aggregated.tentative.push(...pipeline.tentative_details)
+    })
+    return aggregated
+  }, [teamReport])
+
+  const individualTelegramMessage = useTelegramPipelineMessage(individualPipelineData)
+  const teamTelegramMessage = useTelegramPipelineMessage(teamPipelineData)
+
+  const handleCopyMessage = (message: string) => {
+    navigator.clipboard.writeText(message)
+  }
+
+  const handleShareToTelegram = (message: string) => {
+    const encodedMessage = encodeURIComponent(message)
+    const url = `https://t.me/share/url?url=&text=${encodedMessage}`
+    window.open(url, '_blank')
+  }
 
   return (
     <DashboardLayout>
@@ -493,6 +531,30 @@ export const Reports = () => {
               )}
             </div>
 
+            {/* Telegram Message */}
+            {individualTelegramMessage && (
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Telegram Message</h3>
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-4 max-h-96 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
+                  {individualTelegramMessage}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCopyMessage(individualTelegramMessage)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Copy size={16} /> Copy Message
+                  </button>
+                  <button
+                    onClick={() => handleShareToTelegram(individualTelegramMessage)}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Share2 size={16} /> Send to Telegram
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Activity Summary */}
             <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Activity Summary</h3>
@@ -559,6 +621,30 @@ export const Reports = () => {
                 </div>
               )}
             </div>
+
+            {/* Telegram Message */}
+            {teamTelegramMessage && (
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Telegram Message</h3>
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-4 max-h-96 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
+                  {teamTelegramMessage}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCopyMessage(teamTelegramMessage)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Copy size={16} /> Copy Message
+                  </button>
+                  <button
+                    onClick={() => handleShareToTelegram(teamTelegramMessage)}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Share2 size={16} /> Send to Telegram
+                  </button>
+                </div>
+              </div>
+            )}
 
             {teamReport.verticals.map((vertical, idx) => (
               <div key={idx}>
