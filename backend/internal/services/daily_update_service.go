@@ -585,8 +585,14 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 		}
 	}
 
-	// New plans always have tentative status
+	// Read optional pipeline_status, validate against allowed values, default to tentative
 	pipelineStatus := "tentative"
+	if ps, ok := data["pipeline_status"].(string); ok && ps != "" {
+		switch ps {
+		case "tentative", "strong", "sureshot", "done", "kiv":
+			pipelineStatus = ps
+		}
+	}
 
 	id := uuid.New()
 	query := `INSERT INTO plans (id, invite_id, ir_id, ul1, ul2, quoted_amount, expected_uvs, status, remarks, pipeline_status, created_at, updated_at)
