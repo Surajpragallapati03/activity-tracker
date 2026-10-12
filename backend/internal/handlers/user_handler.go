@@ -284,17 +284,11 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	hash, err := utils.HashPassword(req.NewPassword)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
-		return
-	}
-
 	updateReq := &models.UpdateUserRequest{
-		Password: hash,
+		Password: req.NewPassword,
 	}
 
-	_, err = h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
+	_, err := h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
 		return
@@ -321,17 +315,11 @@ func (h *UserHandler) SetPassword(c *gin.Context) {
 		return
 	}
 
-	hash, err := utils.HashPassword(req.NewPassword)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
-		return
-	}
-
 	updateReq := &models.UpdateUserRequest{
-		Password: hash,
+		Password: req.NewPassword,
 	}
 
-	_, err = h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
+	_, err := h.service.UpdateUser(c.Request.Context(), user.ID, updateReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to set password"})
 		return

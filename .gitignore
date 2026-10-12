@@ -10,6 +10,7 @@ frontend/dist/
 # Backend
 backend/.env
 backend/.local.env
+backend/server
 
 # OS
 .DS_Store

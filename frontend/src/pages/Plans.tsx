@@ -304,7 +304,7 @@ export const Plans = () => {
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-1"
                       />
                     </div>
                     {currentUser?.role === 'admin' && (
@@ -771,7 +771,7 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-1"
                       />
                     </div>
                     {sortedOwners
