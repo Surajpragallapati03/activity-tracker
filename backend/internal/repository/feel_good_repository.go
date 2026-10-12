@@ -126,21 +126,32 @@ func (r *FeelGoodRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (r *FeelGoodRepository) List(ctx context.Context, page, limit int) ([]models.FeelGood, int64, error) {
+func (r *FeelGoodRepository) List(ctx context.Context, startDate, endDate string, page, limit int) ([]models.FeelGood, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := ""
+	args := []interface{}{}
+	argNum := 1
+
+	if startDate != "" && endDate != "" {
+		whereClause = fmt.Sprintf("WHERE created_at >= $%d::date AND created_at < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM feel_goods`).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM feel_goods %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
-		 FROM feel_goods ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
+		 FROM feel_goods %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -169,22 +180,32 @@ func (r *FeelGoodRepository) List(ctx context.Context, page, limit int) ([]model
 	return feelGoods, total, rows.Err()
 }
 
-func (r *FeelGoodRepository) ListByFGInviteID(ctx context.Context, fgInviteID string, page, limit int) ([]models.FeelGood, int64, error) {
+func (r *FeelGoodRepository) ListByFGInviteID(ctx context.Context, fgInviteID, startDate, endDate string, page, limit int) ([]models.FeelGood, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := "WHERE fg_invite_id = $1"
+	args := []interface{}{fgInviteID}
+	argNum := 2
+
+	if startDate != "" && endDate != "" {
+		whereClause += fmt.Sprintf(" AND created_at >= $%d::date AND created_at < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM feel_goods WHERE fg_invite_id = $1`, fgInviteID).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM feel_goods %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
-		 FROM feel_goods WHERE fg_invite_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-		fgInviteID,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
+		 FROM feel_goods %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -213,22 +234,32 @@ func (r *FeelGoodRepository) ListByFGInviteID(ctx context.Context, fgInviteID st
 	return feelGoods, total, rows.Err()
 }
 
-func (r *FeelGoodRepository) ListByIRID(ctx context.Context, irID string, page, limit int) ([]models.FeelGood, int64, error) {
+func (r *FeelGoodRepository) ListByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.FeelGood, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := "WHERE ir_id = $1"
+	args := []interface{}{irID}
+	argNum := 2
+
+	if startDate != "" && endDate != "" {
+		whereClause += fmt.Sprintf(" AND created_at >= $%d::date AND created_at < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM feel_goods WHERE ir_id = $1`, irID).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM feel_goods %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
-		 FROM feel_goods WHERE ir_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-		irID,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, fg_invite_id, ir_id, ul1, ul2, status, remarks, created_at, updated_at
+		 FROM feel_goods %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err

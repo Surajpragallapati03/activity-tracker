@@ -59,10 +59,12 @@ type UpdateInviteRequestWithTime struct {
 }
 
 type ListInvitesQuery struct {
-	Page   int    `form:"page"`
-	Limit  int    `form:"limit"`
-	InfoID string `form:"info_id"`
-	IRID   string `form:"ir_id"`
+	Page      int    `form:"page"`
+	Limit     int    `form:"limit"`
+	InfoID    string `form:"info_id"`
+	IRID      string `form:"ir_id"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
 }
 
 type ListInvitesResponse struct {

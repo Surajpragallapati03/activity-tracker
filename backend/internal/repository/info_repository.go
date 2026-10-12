@@ -158,6 +158,28 @@ func (r *InfoRepository) List(ctx context.Context, query *models.ListInfosQuery)
 		argNum++
 	}
 
+	if query.StartDate != "" {
+		if whereClause != "" {
+			whereClause += " AND"
+		} else {
+			whereClause = "WHERE"
+		}
+		whereClause += fmt.Sprintf(" created_at >= $%d::date", argNum)
+		args = append(args, query.StartDate)
+		argNum++
+	}
+
+	if query.EndDate != "" {
+		if whereClause != "" {
+			whereClause += " AND"
+		} else {
+			whereClause = "WHERE"
+		}
+		whereClause += fmt.Sprintf(" created_at < ($%d::date + interval '1 day')", argNum)
+		args = append(args, query.EndDate)
+		argNum++
+	}
+
 	if whereClause == "" {
 		whereClause = "WHERE 1=1"
 	}

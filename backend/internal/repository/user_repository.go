@@ -73,6 +73,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 		return nil, err
 	}
 
+	r.setHasPassword(user)
 	return user, nil
 }
 
@@ -107,6 +108,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		return nil, err
 	}
 
+	r.setHasPassword(user)
 	return user, nil
 }
 
@@ -141,6 +143,7 @@ func (r *UserRepository) GetByIRID(ctx context.Context, irID string) (*models.Us
 		return nil, err
 	}
 
+	r.setHasPassword(user)
 	return user, nil
 }
 
@@ -319,6 +322,7 @@ func (r *UserRepository) List(ctx context.Context, query *models.ListUsersQuery)
 		if err != nil {
 			return nil, 0, err
 		}
+		r.setHasPassword(&user)
 		users = append(users, user)
 	}
 
@@ -327,6 +331,10 @@ func (r *UserRepository) List(ctx context.Context, query *models.ListUsersQuery)
 	}
 
 	return users, total, nil
+}
+
+func (r *UserRepository) setHasPassword(user *models.User) {
+	user.HasPassword = user.PasswordHash != nil && *user.PasswordHash != ""
 }
 
 func emptyStringToNull(s string) interface{} {

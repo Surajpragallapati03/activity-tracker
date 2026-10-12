@@ -149,13 +149,13 @@ func (r *PlanRepository) List(ctx context.Context, query *models.ListPlansQuery)
 	}
 
 	if query.StartDate != "" {
-		whereClause += fmt.Sprintf(" AND created_at >= $%d", argNum)
+		whereClause += fmt.Sprintf(" AND created_at >= $%d::date", argNum)
 		args = append(args, query.StartDate)
 		argNum++
 	}
 
 	if query.EndDate != "" {
-		whereClause += fmt.Sprintf(" AND created_at < $%d", argNum)
+		whereClause += fmt.Sprintf(" AND created_at < ($%d::date + interval '1 day')", argNum)
 		args = append(args, query.EndDate)
 		argNum++
 	}

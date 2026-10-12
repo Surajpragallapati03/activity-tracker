@@ -16,6 +16,7 @@ type User struct {
 	UplineID     *uuid.UUID `json:"upline_id"`
 	Status       string     `json:"status"`
 	PasswordHash *string    `json:"-"`
+	HasPassword  bool       `json:"has_password"`
 	PlansShown   int        `json:"plans_shown"`
 	DrsHit       int        `json:"drs_hit"`
 	PictureURL   *string    `json:"picture_url"`

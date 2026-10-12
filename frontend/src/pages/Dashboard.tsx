@@ -159,7 +159,7 @@ export const Dashboard = () => {
 
       {isPasswordOpen && (
         <PasswordChangeModal
-          hasPassword={!!(displayUser?.password_hash || user?.password_hash)}
+          hasPassword={displayUser?.has_password ?? user?.has_password ?? false}
           onClose={() => setIsPasswordOpen(false)}
         />
       )}

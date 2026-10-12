@@ -126,11 +126,14 @@ func (h *FGInviteHandler) ListFGInvites(c *gin.Context) {
 		}
 	}
 
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
 	user := middleware.GetUser(c)
 
 	closingID := c.Query("closing_id")
 	if closingID != "" {
-		fgInvites, total, err := h.service.ListFGInvitesByClosingID(c.Request.Context(), closingID, page, limit)
+		fgInvites, total, err := h.service.ListFGInvitesByClosingID(c.Request.Context(), closingID, startDate, endDate, page, limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -148,7 +151,7 @@ func (h *FGInviteHandler) ListFGInvites(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
-		fgInvites, total, err := h.service.ListFGInvitesByIRID(c.Request.Context(), irID, page, limit)
+		fgInvites, total, err := h.service.ListFGInvitesByIRID(c.Request.Context(), irID, startDate, endDate, page, limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -167,7 +170,7 @@ func (h *FGInviteHandler) ListFGInvites(c *gin.Context) {
 		return
 	}
 
-	fgInvites, total, err := h.service.ListFGInvites(c.Request.Context(), page, limit)
+	fgInvites, total, err := h.service.ListFGInvites(c.Request.Context(), startDate, endDate, page, limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

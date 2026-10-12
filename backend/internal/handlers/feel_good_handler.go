@@ -126,11 +126,14 @@ func (h *FeelGoodHandler) ListFeelGoods(c *gin.Context) {
 		}
 	}
 
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
 	user := middleware.GetUser(c)
 
 	fgInviteID := c.Query("fg_invite_id")
 	if fgInviteID != "" {
-		feelGoods, total, err := h.service.ListFeelGoodsByFGInviteID(c.Request.Context(), fgInviteID, page, limit)
+		feelGoods, total, err := h.service.ListFeelGoodsByFGInviteID(c.Request.Context(), fgInviteID, startDate, endDate, page, limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -148,7 +151,7 @@ func (h *FeelGoodHandler) ListFeelGoods(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
-		feelGoods, total, err := h.service.ListFeelGoodsByIRID(c.Request.Context(), irID, page, limit)
+		feelGoods, total, err := h.service.ListFeelGoodsByIRID(c.Request.Context(), irID, startDate, endDate, page, limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -167,7 +170,7 @@ func (h *FeelGoodHandler) ListFeelGoods(c *gin.Context) {
 		return
 	}
 
-	feelGoods, total, err := h.service.ListFeelGoods(c.Request.Context(), page, limit)
+	feelGoods, total, err := h.service.ListFeelGoods(c.Request.Context(), startDate, endDate, page, limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

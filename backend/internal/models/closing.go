@@ -48,6 +48,14 @@ type UpdateClosingRequestWithTime struct {
 	Remarks     *string
 }
 
+type ListClosingsQuery struct {
+	Page      int    `form:"page"`
+	Limit     int    `form:"limit"`
+	IRID      string `form:"ir_id"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
+}
+
 func (c *Closing) ToResponse() *ClosingResponse {
 	var closingDate *string
 	if c.ClosingDate != nil {
