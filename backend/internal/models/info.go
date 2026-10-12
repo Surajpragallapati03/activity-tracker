@@ -39,11 +39,13 @@ type UpdateInfoRequest struct {
 }
 
 type ListInfosQuery struct {
-	Page   int    `form:"page"`
-	Limit  int    `form:"limit"`
-	Search string `form:"search"`
-	IRID   string `form:"ir_id"`
-	Status string `form:"status"`
+	Page      int    `form:"page"`
+	Limit     int    `form:"limit"`
+	Search    string `form:"search"`
+	IRID      string `form:"ir_id"`
+	Status    string `form:"status"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
 }
 
 type ListInfosResponse struct {

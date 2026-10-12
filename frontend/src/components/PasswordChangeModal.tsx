@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
 import { Eye, EyeOff } from 'lucide-react'
 import { getErrorMessage } from '../services/errors'
+import { useAuth } from '../hooks/useAuth'
 
 interface PasswordChangeModalProps {
   onClose: () => void
@@ -10,6 +11,8 @@ interface PasswordChangeModalProps {
 }
 
 export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModalProps) => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({
     current_password: '',
     new_password: '',
@@ -42,6 +45,9 @@ export const PasswordChangeModal = ({ onClose, hasPassword }: PasswordChangeModa
     },
     onSuccess: () => {
       setUpdateError(null)
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['users', user.id] })
+      }
       onClose()
     },
     onError: (error) => {

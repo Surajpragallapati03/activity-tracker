@@ -9,7 +9,7 @@ export interface User {
   upline_id: string | null
   plans_shown?: number
   drs_hit?: number
-  password_hash?: string | null
+  has_password?: boolean
   picture_url?: string | null
   created_at?: string
   updated_at?: string

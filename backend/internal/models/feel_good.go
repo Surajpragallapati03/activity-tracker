@@ -53,6 +53,14 @@ type UpdateFeelGoodRequestWithoutBinding struct {
 	Remarks *string
 }
 
+type ListFeelGoodsQuery struct {
+	Page      int    `form:"page"`
+	Limit     int    `form:"limit"`
+	IRID      string `form:"ir_id"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
+}
+
 func (f *FeelGood) ToResponse() *FeelGoodResponse {
 	return &FeelGoodResponse{
 		ID:         f.ID,

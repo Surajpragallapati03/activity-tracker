@@ -126,14 +126,20 @@ func (h *ClosingHandler) ListClosings(c *gin.Context) {
 		}
 	}
 
+	var query models.ListClosingsQuery
+	query.Page = page
+	query.Limit = limit
+	query.IRID = c.Query("ir_id")
+	query.StartDate = c.Query("start_date")
+	query.EndDate = c.Query("end_date")
+
 	user := middleware.GetUser(c)
-	irID := c.Query("ir_id")
-	if irID != "" {
-		if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, irID) {
+	if query.IRID != "" {
+		if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, query.IRID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
-		closings, total, err := h.service.ListClosingsByIRID(c.Request.Context(), irID, page, limit)
+		closings, total, err := h.service.ListClosingsByIRID(c.Request.Context(), query.IRID, query.StartDate, query.EndDate, page, limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -152,7 +158,7 @@ func (h *ClosingHandler) ListClosings(c *gin.Context) {
 		return
 	}
 
-	closings, total, err := h.service.ListClosings(c.Request.Context(), page, limit)
+	closings, total, err := h.service.ListClosings(c.Request.Context(), query.StartDate, query.EndDate, page, limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

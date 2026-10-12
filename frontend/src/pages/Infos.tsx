@@ -6,6 +6,8 @@ import api from '../services/api'
 import { getErrorMessage } from '../services/errors'
 import type { User, Info } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
+import { DateFilter } from '../components/DateFilter'
+import { getDateRangeForPreset, type DatePreset } from '../utils/dates'
 
 interface ListResponse {
   data: Info[]
@@ -29,6 +31,9 @@ export const Infos = () => {
   const [selectedOwnerIrId, setSelectedOwnerIrId] = useState<string | 'all'>('all')
   const [ownerSearchInput, setOwnerSearchInput] = useState('')
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false)
+  const [datePreset, setDatePreset] = useState<DatePreset>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingInfo, setEditingInfo] = useState<Info | null>(null)
   const [viewingInfo, setViewingInfo] = useState<Info | null>(null)
@@ -53,12 +58,24 @@ export const Infos = () => {
     }
   }, [showOwnerDropdown])
 
+  const dateRange = useMemo(() => {
+    const range = getDateRangeForPreset(datePreset)
+    if (datePreset === 'custom') {
+      return { startDate: customStartDate, endDate: customEndDate }
+    }
+    return range || { startDate: '', endDate: '' }
+  }, [datePreset, customStartDate, customEndDate])
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['infos', page, search, selectedOwnerIrId],
+    queryKey: ['infos', page, search, selectedOwnerIrId, datePreset, customStartDate, customEndDate],
     queryFn: async () => {
       const params: any = { page, limit, search: search || undefined }
       if (selectedOwnerIrId !== 'all') {
         params.ir_id = selectedOwnerIrId
+      }
+      if (dateRange.startDate && dateRange.endDate) {
+        params.start_date = dateRange.startDate
+        params.end_date = dateRange.endDate
       }
       const res = await api.get<ListResponse>('/infos', { params })
       return res.data
@@ -242,7 +259,7 @@ export const Infos = () => {
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-1"
                       />
                     </div>
                     {currentUser?.role === 'admin' && (
@@ -269,6 +286,26 @@ export const Infos = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mb-4">
+              <DateFilter
+                preset={datePreset}
+                onPresetChange={(preset) => {
+                  setDatePreset(preset)
+                  setPage(1)
+                }}
+                startDate={customStartDate}
+                onStartDateChange={(date) => {
+                  setCustomStartDate(date)
+                  setPage(1)
+                }}
+                endDate={customEndDate}
+                onEndDateChange={(date) => {
+                  setCustomEndDate(date)
+                  setPage(1)
+                }}
+              />
             </div>
 
             <div className="flex gap-2">

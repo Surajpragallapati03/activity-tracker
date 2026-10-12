@@ -58,6 +58,15 @@ type UpdateFGInviteRequestWithTime struct {
 	Remarks     *string
 }
 
+type ListFGInvitesQuery struct {
+	Page      int    `form:"page"`
+	Limit     int    `form:"limit"`
+	ClosingID string `form:"closing_id"`
+	IRID      string `form:"ir_id"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
+}
+
 func (f *FGInvite) ToResponse() *FGInviteResponse {
 	var meetingDate *string
 	if f.MeetingDate != nil {

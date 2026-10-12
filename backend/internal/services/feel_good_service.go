@@ -147,11 +147,11 @@ func (s *FeelGoodService) DeleteFeelGood(ctx context.Context, id string) error {
 	return s.feelGoodRepo.Delete(ctx, feelGoodID)
 }
 
-func (s *FeelGoodService) ListFeelGoods(ctx context.Context, page, limit int) ([]models.FeelGoodResponse, int64, error) {
+func (s *FeelGoodService) ListFeelGoods(ctx context.Context, startDate, endDate string, page, limit int) ([]models.FeelGoodResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
-	feelGoods, total, err := s.feelGoodRepo.List(ctx, page, limit)
+	feelGoods, total, err := s.feelGoodRepo.List(ctx, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -163,14 +163,14 @@ func (s *FeelGoodService) ListFeelGoods(ctx context.Context, page, limit int) ([
 	return responses, total, nil
 }
 
-func (s *FeelGoodService) ListFeelGoodsByFGInviteID(ctx context.Context, fgInviteID string, page, limit int) ([]models.FeelGoodResponse, int64, error) {
+func (s *FeelGoodService) ListFeelGoodsByFGInviteID(ctx context.Context, fgInviteID, startDate, endDate string, page, limit int) ([]models.FeelGoodResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
 	if fgInviteID = strings.TrimSpace(fgInviteID); fgInviteID == "" {
 		return nil, 0, errors.New("fg_invite_id is required")
 	}
-	feelGoods, total, err := s.feelGoodRepo.ListByFGInviteID(ctx, fgInviteID, page, limit)
+	feelGoods, total, err := s.feelGoodRepo.ListByFGInviteID(ctx, fgInviteID, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -182,14 +182,14 @@ func (s *FeelGoodService) ListFeelGoodsByFGInviteID(ctx context.Context, fgInvit
 	return responses, total, nil
 }
 
-func (s *FeelGoodService) ListFeelGoodsByIRID(ctx context.Context, irID string, page, limit int) ([]models.FeelGoodResponse, int64, error) {
+func (s *FeelGoodService) ListFeelGoodsByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.FeelGoodResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
 	if irID = strings.TrimSpace(irID); irID == "" {
 		return nil, 0, errors.New("ir_id is required")
 	}
-	feelGoods, total, err := s.feelGoodRepo.ListByIRID(ctx, irID, page, limit)
+	feelGoods, total, err := s.feelGoodRepo.ListByIRID(ctx, irID, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}

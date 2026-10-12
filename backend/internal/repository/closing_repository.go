@@ -118,21 +118,32 @@ func (r *ClosingRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (r *ClosingRepository) List(ctx context.Context, page, limit int) ([]models.Closing, int64, error) {
+func (r *ClosingRepository) List(ctx context.Context, startDate, endDate string, page, limit int) ([]models.Closing, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := ""
+	args := []interface{}{}
+	argNum := 1
+
+	if startDate != "" && endDate != "" {
+		whereClause = fmt.Sprintf("WHERE closing_date >= $%d::date AND closing_date < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM closings`).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM closings %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, plan_id, ir_id, closing_date, status, remarks, created_at, updated_at
-		 FROM closings ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, plan_id, ir_id, closing_date, status, remarks, created_at, updated_at
+		 FROM closings %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -160,22 +171,32 @@ func (r *ClosingRepository) List(ctx context.Context, page, limit int) ([]models
 	return closings, total, rows.Err()
 }
 
-func (r *ClosingRepository) ListByIRID(ctx context.Context, irID string, page, limit int) ([]models.Closing, int64, error) {
+func (r *ClosingRepository) ListByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.Closing, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := "WHERE ir_id = $1"
+	args := []interface{}{irID}
+	argNum := 2
+
+	if startDate != "" && endDate != "" {
+		whereClause += fmt.Sprintf(" AND closing_date >= $%d::date AND closing_date < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM closings WHERE ir_id = $1`, irID).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM closings %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, plan_id, ir_id, closing_date, status, remarks, created_at, updated_at
-		 FROM closings WHERE ir_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-		irID,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, plan_id, ir_id, closing_date, status, remarks, created_at, updated_at
+		 FROM closings %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err

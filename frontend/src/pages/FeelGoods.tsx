@@ -6,6 +6,8 @@ import api from '../services/api'
 import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan, Closing, FGInvite, FeelGood } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
+import { DateFilter } from '../components/DateFilter'
+import { getDateRangeForPreset, type DatePreset } from '../utils/dates'
 
 interface ListResponse {
   data: FeelGood[]
@@ -71,6 +73,9 @@ export const FeelGoods = () => {
   const [createError, setCreateError] = useState<string | null>(null)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [datePreset, setDatePreset] = useState<DatePreset>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -88,12 +93,24 @@ export const FeelGoods = () => {
     }
   }, [showOwnerDropdown])
 
+  const dateRange = useMemo(() => {
+    const range = getDateRangeForPreset(datePreset)
+    if (datePreset === 'custom') {
+      return { startDate: customStartDate, endDate: customEndDate }
+    }
+    return range
+  }, [datePreset, customStartDate, customEndDate])
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['feel-goods', page, search, selectedOwnerIrId],
+    queryKey: ['feel-goods', page, search, selectedOwnerIrId, dateRange?.startDate, dateRange?.endDate],
     queryFn: async () => {
       const params: any = { page, limit, search: search || undefined }
       if (selectedOwnerIrId !== 'all') {
         params.ir_id = selectedOwnerIrId
+      }
+      if (dateRange?.startDate && dateRange?.endDate) {
+        params.start_date = dateRange.startDate
+        params.end_date = dateRange.endDate
       }
       const res = await api.get<ListResponse>('/feel-goods', { params })
       return res.data
@@ -279,6 +296,20 @@ export const FeelGoods = () => {
     setPage(1)
   }
 
+  const handleDatePresetChange = (preset: DatePreset) => {
+    setDatePreset(preset)
+    setPage(1)
+  }
+
+  const handleCustomDateChange = (type: 'start' | 'end', value: string) => {
+    if (type === 'start') {
+      setCustomStartDate(value)
+    } else {
+      setCustomEndDate(value)
+    }
+    setPage(1)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -321,7 +352,7 @@ export const FeelGoods = () => {
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-1"
                       />
                     </div>
                     {currentUser?.role === 'admin' && (
@@ -348,6 +379,17 @@ export const FeelGoods = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <DateFilter
+                preset={datePreset}
+                onPresetChange={handleDatePresetChange}
+                startDate={customStartDate}
+                onStartDateChange={(date) => handleCustomDateChange('start', date)}
+                endDate={customEndDate}
+                onEndDateChange={(date) => handleCustomDateChange('end', date)}
+              />
             </div>
 
             <div className="flex gap-2">
@@ -738,7 +780,7 @@ const CreateFeelGoodModal = ({ onClose, onSubmit, isLoading, error, users, fgInv
                         placeholder="Search by name or IR ID..."
                         value={ownerSearchInput}
                         onChange={(e) => setOwnerSearchInput(e.target.value)}
-                        className="w-full px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-1"
                       />
                     </div>
                     {sortedOwners

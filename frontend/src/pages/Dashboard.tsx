@@ -5,7 +5,6 @@ import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import type { User } from '../types/auth'
 import { Loader2, Edit2, Users, TrendingUp, Target } from 'lucide-react'
-import { PasswordChangeModal } from '../components/PasswordChangeModal'
 import { getErrorMessage } from '../services/errors'
 
 interface ListResponse {
@@ -17,7 +16,6 @@ export const Dashboard = () => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isPasswordOpen, setIsPasswordOpen] = useState(false)
 
   const { data: currentUserProfile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['users', user?.id],
@@ -45,7 +43,6 @@ export const Dashboard = () => {
   return (
     <DashboardLayout
       onProfileClick={() => setIsEditOpen(true)}
-      onPasswordClick={() => setIsPasswordOpen(true)}
     >
       <div className="space-y-8">
         <div>
@@ -154,13 +151,6 @@ export const Dashboard = () => {
             setIsEditOpen(false)
             queryClient.invalidateQueries({ queryKey: ['users', user?.id] })
           }}
-        />
-      )}
-
-      {isPasswordOpen && (
-        <PasswordChangeModal
-          hasPassword={!!(displayUser?.password_hash || user?.password_hash)}
-          onClose={() => setIsPasswordOpen(false)}
         />
       )}
     </DashboardLayout>

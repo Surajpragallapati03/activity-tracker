@@ -142,11 +142,11 @@ func (s *ClosingService) DeleteClosing(ctx context.Context, id string) error {
 	return s.closingRepo.Delete(ctx, closingID)
 }
 
-func (s *ClosingService) ListClosings(ctx context.Context, page, limit int) ([]models.ClosingResponse, int64, error) {
+func (s *ClosingService) ListClosings(ctx context.Context, startDate, endDate string, page, limit int) ([]models.ClosingResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
-	closings, total, err := s.closingRepo.List(ctx, page, limit)
+	closings, total, err := s.closingRepo.List(ctx, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -158,14 +158,14 @@ func (s *ClosingService) ListClosings(ctx context.Context, page, limit int) ([]m
 	return responses, total, nil
 }
 
-func (s *ClosingService) ListClosingsByIRID(ctx context.Context, irID string, page, limit int) ([]models.ClosingResponse, int64, error) {
+func (s *ClosingService) ListClosingsByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.ClosingResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
 	if irID = strings.TrimSpace(irID); irID == "" {
 		return nil, 0, errors.New("ir_id is required")
 	}
-	closings, total, err := s.closingRepo.ListByIRID(ctx, irID, page, limit)
+	closings, total, err := s.closingRepo.ListByIRID(ctx, irID, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}

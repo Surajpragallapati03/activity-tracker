@@ -134,21 +134,32 @@ func (r *FGInviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (r *FGInviteRepository) List(ctx context.Context, page, limit int) ([]models.FGInvite, int64, error) {
+func (r *FGInviteRepository) List(ctx context.Context, startDate, endDate string, page, limit int) ([]models.FGInvite, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := ""
+	args := []interface{}{}
+	argNum := 1
+
+	if startDate != "" && endDate != "" {
+		whereClause = fmt.Sprintf("WHERE meeting_date >= $%d::date AND meeting_date < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM fg_invites`).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM fg_invites %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
-		 FROM fg_invites ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
+		 FROM fg_invites %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -178,22 +189,32 @@ func (r *FGInviteRepository) List(ctx context.Context, page, limit int) ([]model
 	return fgInvites, total, rows.Err()
 }
 
-func (r *FGInviteRepository) ListByIRID(ctx context.Context, irID string, page, limit int) ([]models.FGInvite, int64, error) {
+func (r *FGInviteRepository) ListByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.FGInvite, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := "WHERE ir_id = $1"
+	args := []interface{}{irID}
+	argNum := 2
+
+	if startDate != "" && endDate != "" {
+		whereClause += fmt.Sprintf(" AND meeting_date >= $%d::date AND meeting_date < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM fg_invites WHERE ir_id = $1`, irID).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM fg_invites %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
-		 FROM fg_invites WHERE ir_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-		irID,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
+		 FROM fg_invites %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -223,22 +244,32 @@ func (r *FGInviteRepository) ListByIRID(ctx context.Context, irID string, page, 
 	return fgInvites, total, rows.Err()
 }
 
-func (r *FGInviteRepository) ListByClosingID(ctx context.Context, closingID string, page, limit int) ([]models.FGInvite, int64, error) {
+func (r *FGInviteRepository) ListByClosingID(ctx context.Context, closingID, startDate, endDate string, page, limit int) ([]models.FGInvite, int64, error) {
 	offset := (page - 1) * limit
 
+	whereClause := "WHERE closing_id = $1"
+	args := []interface{}{closingID}
+	argNum := 2
+
+	if startDate != "" && endDate != "" {
+		whereClause += fmt.Sprintf(" AND meeting_date >= $%d::date AND meeting_date < ($%d::date + interval '1 day')", argNum, argNum+1)
+		args = append(args, startDate, endDate)
+		argNum += 2
+	}
+
 	var total int64
-	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM fg_invites WHERE closing_id = $1`, closingID).Scan(&total)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM fg_invites %s", whereClause)
+	err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	queryArgs := append(args, limit, offset)
 	rows, err := r.db.Query(
 		ctx,
-		`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
-		 FROM fg_invites WHERE closing_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-		closingID,
-		limit,
-		offset,
+		fmt.Sprintf(`SELECT id, closing_id, ir_id, meeting_date, meeting_time, mode, status, remarks, created_at, updated_at
+		 FROM fg_invites %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, whereClause, argNum+1, argNum+2),
+		queryArgs...,
 	)
 	if err != nil {
 		return nil, 0, err

@@ -166,11 +166,11 @@ func (s *FGInviteService) DeleteFGInvite(ctx context.Context, id string) error {
 	return s.fgInviteRepo.Delete(ctx, fgInviteID)
 }
 
-func (s *FGInviteService) ListFGInvites(ctx context.Context, page, limit int) ([]models.FGInviteResponse, int64, error) {
+func (s *FGInviteService) ListFGInvites(ctx context.Context, startDate, endDate string, page, limit int) ([]models.FGInviteResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
-	fgInvites, total, err := s.fgInviteRepo.List(ctx, page, limit)
+	fgInvites, total, err := s.fgInviteRepo.List(ctx, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -182,14 +182,14 @@ func (s *FGInviteService) ListFGInvites(ctx context.Context, page, limit int) ([
 	return responses, total, nil
 }
 
-func (s *FGInviteService) ListFGInvitesByIRID(ctx context.Context, irID string, page, limit int) ([]models.FGInviteResponse, int64, error) {
+func (s *FGInviteService) ListFGInvitesByIRID(ctx context.Context, irID, startDate, endDate string, page, limit int) ([]models.FGInviteResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
 	if irID = strings.TrimSpace(irID); irID == "" {
 		return nil, 0, errors.New("ir_id is required")
 	}
-	fgInvites, total, err := s.fgInviteRepo.ListByIRID(ctx, irID, page, limit)
+	fgInvites, total, err := s.fgInviteRepo.ListByIRID(ctx, irID, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -201,14 +201,14 @@ func (s *FGInviteService) ListFGInvitesByIRID(ctx context.Context, irID string, 
 	return responses, total, nil
 }
 
-func (s *FGInviteService) ListFGInvitesByClosingID(ctx context.Context, closingID string, page, limit int) ([]models.FGInviteResponse, int64, error) {
+func (s *FGInviteService) ListFGInvitesByClosingID(ctx context.Context, closingID, startDate, endDate string, page, limit int) ([]models.FGInviteResponse, int64, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, errors.New("invalid pagination parameters")
 	}
 	if closingID = strings.TrimSpace(closingID); closingID == "" {
 		return nil, 0, errors.New("closing_id is required")
 	}
-	fgInvites, total, err := s.fgInviteRepo.ListByClosingID(ctx, closingID, page, limit)
+	fgInvites, total, err := s.fgInviteRepo.ListByClosingID(ctx, closingID, startDate, endDate, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
