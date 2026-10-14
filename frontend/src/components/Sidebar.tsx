@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight, TrendingUp, Bookmark, BarChart3, Clock } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, Users, FileText, Calendar, CheckCircle, Gift, Heart, ChevronRight, TrendingUp, Bookmark, BarChart3, Clock } from 'lucide-react'
 
 interface SidebarProps {
   isCollapsed: boolean
   onToggleCollapsed: () => void
+  isMobileOpen: boolean
+  onMobileOpenChange: (open: boolean) => void
 }
 
-export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+export const Sidebar = ({ isCollapsed, onToggleCollapsed, isMobileOpen, onMobileOpenChange }: SidebarProps) => {
   const [isActivitiesOpen, setIsActivitiesOpen] = useState(true)
   const location = useLocation()
 
@@ -36,7 +37,6 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
   const NavLink = ({ href, label, icon: Icon }: { href: string; label: string; icon: any }) => (
     <Link
       to={href}
-      onClick={() => setIsMobileOpen(false)}
       title={isCollapsed ? label : ''}
       className={`nav-link ${isActive(href) ? 'active' : ''} ${isCollapsed ? 'justify-center' : ''}`}
     >
@@ -47,20 +47,11 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg lg:hidden hover:bg-blue-700"
-        aria-label="Toggle menu"
-      >
-        {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={() => onMobileOpenChange(false)}
         />
       )}
 
@@ -129,7 +120,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
             <Link
               key={item.href}
               to={item.href}
-              onClick={() => setIsMobileOpen(false)}
+              onClick={() => onMobileOpenChange(false)}
               className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
             >
               {item.label}
@@ -154,7 +145,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
                   <Link
                     key={item.href}
                     to={item.href}
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => onMobileOpenChange(false)}
                     className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
                   >
                     {item.label}

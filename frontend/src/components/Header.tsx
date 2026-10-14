@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
-import { LogOut, ChevronDown, Moon, Sun } from 'lucide-react'
+import { LogOut, ChevronDown, Moon, Sun, Menu } from 'lucide-react'
 import { UserAvatar } from './UserAvatar'
 
 interface HeaderProps {
   onProfileClick?: () => void
   onPasswordClick?: () => void
+  onMobileMenuToggle?: () => void
 }
 
-export const Header = ({ onProfileClick, onPasswordClick }: HeaderProps) => {
+export const Header = ({ onProfileClick, onPasswordClick, onMobileMenuToggle }: HeaderProps) => {
   const { user, logout } = useAuth()
   const { isDark, setTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -46,11 +47,33 @@ export const Header = ({ onProfileClick, onPasswordClick }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-20">
       <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Activity Tracker</h1>
-        <div className="flex items-center gap-4">
+        {/* Mobile left section */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <button
+            onClick={onMobileMenuToggle}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <Menu size={24} />
+          </button>
           <button
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+            title={isDark ? 'Light mode' : 'Dark mode'}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
+
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white hidden lg:block">Activity Tracker</h1>
+        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-slate-900 dark:text-white lg:hidden">Activity Tracker</h1>
+
+        <div className="flex items-center gap-4">
+          {/* Desktop theme toggle */}
+          <button
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="hidden lg:flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
             title={isDark ? 'Light mode' : 'Dark mode'}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
