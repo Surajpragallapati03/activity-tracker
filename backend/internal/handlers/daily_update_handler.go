@@ -177,6 +177,10 @@ func (h *DailyUpdateHandler) verifyActivityAuthorization(ctx context.Context, us
 		if err != nil {
 			return false
 		}
+		// Require that the activity belongs to targetIRID for update/delete
+		if irID != targetIRID {
+			return false
+		}
 	default:
 		return false
 	}
