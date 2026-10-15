@@ -1,13 +1,14 @@
 package models
 
 type DailyUpdateRequest struct {
-	Date   string `json:"date" binding:"required"` // YYYY-MM-DD
-	Infos  []DailyUpdateActivityRequest `json:"infos"`
-	Invites []DailyUpdateActivityRequest `json:"invites"`
-	Plans   []DailyUpdateActivityRequest `json:"plans"`
-	Closings []DailyUpdateActivityRequest `json:"closings"`
-	FGInvites []DailyUpdateActivityRequest `json:"fg_invites"`
-	FeelGoods []DailyUpdateActivityRequest `json:"feel_goods"`
+	Date       string `json:"date" binding:"required"` // YYYY-MM-DD
+	TargetIRID string `json:"target_ir_id"`            // IR ID of the activity owner
+	Infos      []DailyUpdateActivityRequest `json:"infos"`
+	Invites    []DailyUpdateActivityRequest `json:"invites"`
+	Plans      []DailyUpdateActivityRequest `json:"plans"`
+	Closings   []DailyUpdateActivityRequest `json:"closings"`
+	FGInvites  []DailyUpdateActivityRequest `json:"fg_invites"`
+	FeelGoods  []DailyUpdateActivityRequest `json:"feel_goods"`
 }
 
 type DailyUpdateActivityRequest struct {
@@ -39,5 +40,6 @@ type DailyUpdateSummary struct {
 }
 
 type GetDailyUpdateRequest struct {
-	Date string `form:"date" binding:"required"` // YYYY-MM-DD
+	Date       string `form:"date" binding:"required"` // YYYY-MM-DD
+	TargetIRID string `form:"target_ir_id"`            // IR ID of the activity owner (optional, defaults to current user)
 }
