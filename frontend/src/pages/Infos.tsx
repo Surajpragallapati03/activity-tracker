@@ -34,6 +34,7 @@ export const Infos = () => {
   const [datePreset, setDatePreset] = useState<DatePreset>('all')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [selectedResponse, setSelectedResponse] = useState<string>('all')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingInfo, setEditingInfo] = useState<Info | null>(null)
   const [viewingInfo, setViewingInfo] = useState<Info | null>(null)
@@ -67,7 +68,7 @@ export const Infos = () => {
   }, [datePreset, customStartDate, customEndDate])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['infos', page, search, selectedOwnerIrId, datePreset, customStartDate, customEndDate],
+    queryKey: ['infos', page, search, selectedOwnerIrId, datePreset, customStartDate, customEndDate, selectedResponse],
     queryFn: async () => {
       const params: any = { page, limit, search: search || undefined }
       if (selectedOwnerIrId !== 'all') {
@@ -76,6 +77,9 @@ export const Infos = () => {
       if (dateRange.startDate && dateRange.endDate) {
         params.start_date = dateRange.startDate
         params.end_date = dateRange.endDate
+      }
+      if (selectedResponse !== 'all') {
+        params.response = selectedResponse
       }
       const res = await api.get<ListResponse>('/infos', { params })
       return res.data
@@ -217,6 +221,11 @@ export const Infos = () => {
     setPage(1)
   }
 
+  const handleResponseChange = (value: string) => {
+    setSelectedResponse(value)
+    setPage(1)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -306,6 +315,22 @@ export const Infos = () => {
                   setPage(1)
                 }}
               />
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label className="label text-sm">Response</label>
+              <select
+                value={selectedResponse}
+                onChange={(e) => handleResponseChange(e.target.value)}
+                className="input"
+              >
+                <option value="all">All</option>
+                <option value="A">A</option>
+                <option value="AB">AB</option>
+                <option value="B">B</option>
+                <option value="BC">BC</option>
+                <option value="C">C</option>
+              </select>
             </div>
 
             <div className="flex gap-2">

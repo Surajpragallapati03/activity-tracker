@@ -158,6 +158,17 @@ func (r *InfoRepository) List(ctx context.Context, query *models.ListInfosQuery)
 		argNum++
 	}
 
+	if query.Response != "" {
+		if whereClause != "" {
+			whereClause += " AND"
+		} else {
+			whereClause = "WHERE"
+		}
+		whereClause += fmt.Sprintf(" response = $%d", argNum)
+		args = append(args, query.Response)
+		argNum++
+	}
+
 	if query.StartDate != "" {
 		if whereClause != "" {
 			whereClause += " AND"
