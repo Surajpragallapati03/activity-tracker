@@ -21,6 +21,7 @@ export const DashboardLayout = ({ children, onProfileClick }: DashboardLayoutPro
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     return stored ? JSON.parse(stored) : false
   })
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPasswordOpen, setIsPasswordOpen] = useState(false)
 
   const { data: currentUserProfile } = useQuery({
@@ -41,9 +42,13 @@ export const DashboardLayout = ({ children, onProfileClick }: DashboardLayoutPro
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <Header onProfileClick={onProfileClick} onPasswordClick={() => setIsPasswordOpen(true)} />
+      <Header
+        onProfileClick={onProfileClick}
+        onPasswordClick={() => setIsPasswordOpen(true)}
+        onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
       <div className="flex pt-16">
-        <Sidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setIsCollapsed(!isCollapsed)} />
+        <Sidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setIsCollapsed(!isCollapsed)} isMobileOpen={isMobileMenuOpen} onMobileOpenChange={(open) => setIsMobileMenuOpen(open)} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full overflow-auto transition-all duration-300">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
