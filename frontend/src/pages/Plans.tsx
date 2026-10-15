@@ -56,6 +56,7 @@ export const Plans = () => {
   const [datePreset, setDatePreset] = useState<DatePreset>('all')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [selectedPipelineStatus, setSelectedPipelineStatus] = useState<string>('all')
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -82,7 +83,7 @@ export const Plans = () => {
   }, [datePreset, customStartDate, customEndDate])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['plans', page, search, selectedOwnerIrId, dateRange?.startDate, dateRange?.endDate],
+    queryKey: ['plans', page, search, selectedOwnerIrId, dateRange?.startDate, dateRange?.endDate, selectedPipelineStatus],
     queryFn: async () => {
       const params: any = { page, limit, search: search || undefined }
       if (selectedOwnerIrId !== 'all') {
@@ -91,6 +92,9 @@ export const Plans = () => {
       if (dateRange?.startDate && dateRange?.endDate) {
         params.start_date = dateRange.startDate
         params.end_date = dateRange.endDate
+      }
+      if (selectedPipelineStatus !== 'all') {
+        params.pipeline_status = selectedPipelineStatus
       }
       const res = await api.get<ListResponse>('/plans', { params })
       return res.data
@@ -263,6 +267,11 @@ export const Plans = () => {
     setPage(1)
   }
 
+  const handlePipelineStatusChange = (status: string) => {
+    setSelectedPipelineStatus(status)
+    setPage(1)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -343,6 +352,22 @@ export const Plans = () => {
                 endDate={customEndDate}
                 onEndDateChange={(date) => handleCustomDateChange('end', date)}
               />
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label className="label text-sm">Pipeline Status</label>
+              <select
+                value={selectedPipelineStatus}
+                onChange={(e) => handlePipelineStatusChange(e.target.value)}
+                className="input"
+              >
+                <option value="all">All</option>
+                <option value="tentative">Tentative</option>
+                <option value="strong">Strong</option>
+                <option value="sureshot">Sureshot</option>
+                <option value="kiv">KIV</option>
+                <option value="done">Done</option>
+              </select>
             </div>
 
             <div className="flex gap-2">
