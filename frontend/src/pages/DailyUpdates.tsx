@@ -174,6 +174,12 @@ export const DailyUpdates = () => {
   }, [selectedOwnerIrId, getOwnersForActivitySelector])
 
   const handleOwnerSelect = (irId: string) => {
+    if (changes.size > 0 || deletedIds.size > 0) {
+      const confirmDiscard = window.confirm('You have unsaved changes. Are you sure you want to discard them?')
+      if (!confirmDiscard) {
+        return
+      }
+    }
     setSelectedOwnerIrId(irId)
     setShowOwnerDropdown(false)
     setOwnerSearchInput('')

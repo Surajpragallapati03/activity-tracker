@@ -356,6 +356,11 @@ func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, ac
 		if err != nil {
 			return fmt.Errorf("cannot get ir_id from info: %w", err)
 		}
+
+		// Validate that the info belongs to targetIRID
+		if irID != targetIRID {
+			return fmt.Errorf("info does not belong to target IR")
+		}
 	}
 
 	var meetingDate *time.Time
@@ -587,6 +592,11 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 		err = tx.QueryRow(ctx, "SELECT ir_id FROM invites WHERE id = $1", inviteUUID).Scan(&irID)
 		if err != nil {
 			return fmt.Errorf("cannot get ir_id from invite: %w", err)
+		}
+
+		// Validate that the invite belongs to targetIRID
+		if irID != targetIRID {
+			return fmt.Errorf("invite does not belong to target IR")
 		}
 	}
 

@@ -267,7 +267,7 @@ export const PipelineUpdates = () => {
       queryClient.invalidateQueries({ queryKey: ['plans-strong'] })
       queryClient.invalidateQueries({ queryKey: ['plans-sureshot'] })
       queryClient.invalidateQueries({ queryKey: ['plans'] })
-      queryClient.invalidateQueries({ queryKey: ['kiv'] })
+      queryClient.invalidateQueries({ queryKey: ['kiv-plans'] })
       setEditingPlan(null)
       setUpdateError(null)
     },
