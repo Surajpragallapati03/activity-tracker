@@ -1,10 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
+import { getErrorMessage } from '../services/errors'
 import type { User, Info, Plan, Invite } from '../types/auth'
-import { ChevronDown, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronDown, Loader2, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react'
+import { EditPlanModal } from '../components/EditPlanModal'
 
 interface ListResponse {
   data: Plan[]
@@ -39,6 +41,7 @@ type DateRange = 'today' | 'week' | 'month' | 'custom'
 
 export const PipelineUpdates = () => {
   const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [selectedOwnerIrId, setSelectedOwnerIrId] = useState<string>('')
   const [ownerSearchInput, setOwnerSearchInput] = useState('')
@@ -46,6 +49,8 @@ export const PipelineUpdates = () => {
   const [dateRange, setDateRange] = useState<DateRange>('month')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -252,6 +257,25 @@ export const PipelineUpdates = () => {
     enabled: !!selectedOwnerIrId,
   })
 
+  const updateMutation = useMutation({
+    mutationFn: async (req: any) => {
+      const res = await api.put<Plan>(`/plans/${editingPlan!.id}`, req)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plans-tentative'] })
+      queryClient.invalidateQueries({ queryKey: ['plans-strong'] })
+      queryClient.invalidateQueries({ queryKey: ['plans-sureshot'] })
+      queryClient.invalidateQueries({ queryKey: ['plans'] })
+      queryClient.invalidateQueries({ queryKey: ['kiv'] })
+      setEditingPlan(null)
+      setUpdateError(null)
+    },
+    onError: (error) => {
+      setUpdateError(getErrorMessage(error))
+    },
+  })
+
   const summarizeHierarchyPlans = (plans: Plan[]) => {
     if (!selectedOwner || !allUsers) return { plans: [], totalUV: 0, count: 0 }
 
@@ -275,6 +299,14 @@ export const PipelineUpdates = () => {
   }, [tentativeData.plans, strongData.plans, sureshottData.plans, page, limit])
 
   const totalPlans = tentativeData.plans.length + strongData.plans.length + sureshottData.plans.length
+
+  const canEditPlan = (plan: Plan) => {
+    if (!currentUser) return false
+    if (currentUser.role === 'admin') return true
+    const owner = allUsers?.find((u) => u.ir_id === plan.ir_id)
+    if (!owner) return false
+    return owner.id === currentUser.id || downlines.has(owner.id)
+  }
 
   return (
     <DashboardLayout>
@@ -412,6 +444,7 @@ export const PipelineUpdates = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Expected UVs</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Remarks</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-700 dark:text-slate-300 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -419,6 +452,7 @@ export const PipelineUpdates = () => {
                       const invite = allInvites?.find((i) => i.id === plan.invite_id)
                       const info = allInfos?.find((i) => i.id === invite?.info_id)
                       const owner = allUsers?.find((u) => u.ir_id === plan.ir_id)
+                      const canEdit = canEditPlan(plan)
                       return (
                         <tr key={plan.id} className="hover:bg-slate-50 dark:bg-slate-800">
                           <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
@@ -427,6 +461,20 @@ export const PipelineUpdates = () => {
                           <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.expected_uvs || 'NA'}</td>
                           <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.pipeline_status}</td>
                           <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{plan.remarks || 'NA'}</td>
+                          <td className="px-6 py-4 text-center">
+                            {canEdit && (
+                              <button
+                                onClick={() => {
+                                  setEditingPlan(plan)
+                                  setUpdateError(null)
+                                }}
+                                className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded transition"
+                                title="Edit plan"
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       )
                     })}
@@ -461,6 +509,21 @@ export const PipelineUpdates = () => {
             </>
           )}
         </div>
+
+        {editingPlan && (
+          <EditPlanModal
+            plan={editingPlan}
+            onClose={() => {
+              setEditingPlan(null)
+              setUpdateError(null)
+            }}
+            onSubmit={(data) => updateMutation.mutate(data)}
+            isLoading={updateMutation.isPending}
+            error={updateError}
+            users={allUsers || []}
+            currentUser={currentUser}
+          />
+        )}
       </div>
     </DashboardLayout>
   )
