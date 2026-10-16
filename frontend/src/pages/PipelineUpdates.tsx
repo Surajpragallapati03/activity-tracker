@@ -357,15 +357,32 @@ export const PipelineUpdates = () => {
       const res = await api.put<Plan>(`/plans/${editingPlan!.id}`, req)
       return res.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans-tentative'] })
-      queryClient.invalidateQueries({ queryKey: ['plans-strong'] })
-      queryClient.invalidateQueries({ queryKey: ['plans-sureshot'] })
-      queryClient.invalidateQueries({ queryKey: ['plans-team-tentative'] })
-      queryClient.invalidateQueries({ queryKey: ['plans-team-strong'] })
-      queryClient.invalidateQueries({ queryKey: ['plans-team-sureshot'] })
-      queryClient.invalidateQueries({ queryKey: ['plans'] })
-      queryClient.invalidateQueries({ queryKey: ['kiv-plans'] })
+    onSuccess: (updatedPlan) => {
+      const updateStatusCache = (status: string) => (oldData: ListResponse | undefined) => {
+        if (!oldData) return oldData
+        const filtered = oldData.data.filter(p => p.id !== updatedPlan.id)
+        if (updatedPlan.pipeline_status === status) {
+          return { ...oldData, data: [updatedPlan, ...filtered] }
+        }
+        return { ...oldData, data: filtered, total: Math.max(0, oldData.total - 1) }
+      }
+
+      if (mode === 'individual') {
+        ;['tentative', 'strong', 'sureshot'].forEach(status => {
+          queryClient.setQueryData(
+            [`plans-${status}`, selectedOwnerIrId, dateParams],
+            updateStatusCache(status)
+          )
+        })
+      } else {
+        ;['tentative', 'strong', 'sureshot'].forEach(status => {
+          queryClient.setQueryData(
+            [`plans-team-${status}`, selectedVerticals, dateParams],
+            updateStatusCache(status)
+          )
+        })
+      }
+
       setEditingPlan(null)
       setUpdateError(null)
     },
