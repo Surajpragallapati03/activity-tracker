@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -130,8 +131,26 @@ func (h *PlanHandler) UpdatePlan(c *gin.Context) {
 		return
 	}
 
+	var rawReq map[string]interface{}
+	if err := c.ShouldBindJSON(&rawReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Plan owner (ir_id) cannot be changed after creation
+	if _, hasIRID := rawReq["ir_id"]; hasIRID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "plan owner cannot be changed"})
+		return
+	}
+
+	// Convert to UpdatePlanRequest
 	var req models.UpdatePlanRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	reqBytes, err := json.Marshal(rawReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := json.Unmarshal(reqBytes, &req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

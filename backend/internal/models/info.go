@@ -44,6 +44,7 @@ type ListInfosQuery struct {
 	Search    string `form:"search"`
 	IRID      string `form:"ir_id"`
 	Status    string `form:"status"`
+	Response  string `form:"response"`
 	StartDate string `form:"start_date"`
 	EndDate   string `form:"end_date"`
 }

@@ -7,6 +7,7 @@ import { getErrorMessage } from '../services/errors'
 import type { User, Info, Invite, Plan } from '../types/auth'
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight, Loader2, AlertCircle, Eye, ChevronDown } from 'lucide-react'
 import { DateFilter } from '../components/DateFilter'
+import { EditPlanModal } from '../components/EditPlanModal'
 import { getDateRangeForPreset, type DatePreset } from '../utils/dates'
 
 interface ListResponse {
@@ -55,6 +56,7 @@ export const Plans = () => {
   const [datePreset, setDatePreset] = useState<DatePreset>('all')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [selectedPipelineStatus, setSelectedPipelineStatus] = useState<string>('all')
 
   const limit = 20
   const ownerDropdownRef = useRef<HTMLDivElement>(null)
@@ -81,7 +83,7 @@ export const Plans = () => {
   }, [datePreset, customStartDate, customEndDate])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['plans', page, search, selectedOwnerIrId, dateRange?.startDate, dateRange?.endDate],
+    queryKey: ['plans', page, search, selectedOwnerIrId, dateRange?.startDate, dateRange?.endDate, selectedPipelineStatus],
     queryFn: async () => {
       const params: any = { page, limit, search: search || undefined }
       if (selectedOwnerIrId !== 'all') {
@@ -90,6 +92,9 @@ export const Plans = () => {
       if (dateRange?.startDate && dateRange?.endDate) {
         params.start_date = dateRange.startDate
         params.end_date = dateRange.endDate
+      }
+      if (selectedPipelineStatus !== 'all') {
+        params.pipeline_status = selectedPipelineStatus
       }
       const res = await api.get<ListResponse>('/plans', { params })
       return res.data
@@ -262,6 +267,11 @@ export const Plans = () => {
     setPage(1)
   }
 
+  const handlePipelineStatusChange = (status: string) => {
+    setSelectedPipelineStatus(status)
+    setPage(1)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -342,6 +352,22 @@ export const Plans = () => {
                 endDate={customEndDate}
                 onEndDateChange={(date) => handleCustomDateChange('end', date)}
               />
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label className="label text-sm">Pipeline Status</label>
+              <select
+                value={selectedPipelineStatus}
+                onChange={(e) => handlePipelineStatusChange(e.target.value)}
+                className="input"
+              >
+                <option value="all">All</option>
+                <option value="tentative">Tentative</option>
+                <option value="strong">Strong</option>
+                <option value="sureshot">Sureshot</option>
+                <option value="kiv">KIV</option>
+                <option value="done">Done</option>
+              </select>
             </div>
 
             <div className="flex gap-2">
@@ -964,159 +990,6 @@ const CreatePlanModal = ({ onClose, onSubmit, isLoading, error, users, invites, 
             </button>
             <button type="submit" disabled={isLoading || !isOwnerSelected} className="btn-primary">
               {isLoading ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-interface EditPlanModalProps {
-  plan: Plan
-  invite?: Invite
-  info?: Info
-  onClose: () => void
-  onSubmit: (data: any) => void
-  isLoading: boolean
-  error: string | null
-  users: User[]
-  currentUser: User | null
-}
-
-const EditPlanModal = ({ plan, onClose, onSubmit, isLoading, error, users, currentUser }: EditPlanModalProps) => {
-  const [form, setForm] = useState({
-    ir_id: plan.ir_id,
-    ul1: plan.ul1,
-    ul2: plan.ul2,
-    quoted_amount: plan.quoted_amount || '',
-    expected_uvs: plan.expected_uvs?.toString() || '',
-    status: plan.status,
-    remarks: plan.remarks || '',
-    pipeline_status: plan.pipeline_status || 'tentative',
-  })
-
-  const isAdmin = currentUser?.role === 'admin'
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const submitData = {
-      ul1: form.ul1,
-      ul2: form.ul2,
-      quoted_amount: form.quoted_amount || undefined,
-      expected_uvs: form.expected_uvs ? parseFloat(form.expected_uvs) : undefined,
-      status: form.status,
-      remarks: form.remarks || undefined,
-      pipeline_status: form.pipeline_status,
-    }
-    onSubmit(submitData)
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="card-header">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Plan</h3>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="card-content space-y-4">
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-            <div>
-              <label className="label">UL1 *</label>
-              <input
-                type="text"
-                required
-                value={form.ul1}
-                onChange={(e) => setForm({ ...form, ul1: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">UL2 *</label>
-              <input
-                type="text"
-                required
-                value={form.ul2}
-                onChange={(e) => setForm({ ...form, ul2: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">Quoted Amount</label>
-              <input
-                type="text"
-                value={form.quoted_amount}
-                onChange={(e) => setForm({ ...form, quoted_amount: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">Expected UV</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.expected_uvs}
-                onChange={(e) => setForm({ ...form, expected_uvs: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">Status</label>
-              <input
-                type="text"
-                
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">Pipeline Status</label>
-              <select
-                value={form.pipeline_status}
-                onChange={(e) => setForm({ ...form, pipeline_status: e.target.value })}
-                className="input"
-              >
-                <option value="tentative">Tentative</option>
-                <option value="strong">Strong</option>
-                <option value="sureshot">Sureshot</option>
-                <option value="done">Done</option>
-                <option value="kiv">KIV</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Remarks</label>
-              <textarea
-                value={form.remarks}
-                onChange={(e) => setForm({ ...form, remarks: e.target.value })}
-                className="input"
-                rows={3}
-              />
-            </div>
-            {isAdmin && (
-              <div>
-                <label className="label">IR ID</label>
-                <select
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-          <div className="card-footer flex gap-3 justify-end">
-            <button type="button" onClick={onClose} className="btn-secondary">
-              Cancel
-            </button>
-            <button type="submit" disabled={isLoading} className="btn-primary">
-              {isLoading ? 'Updating...' : 'Update'}
             </button>
           </div>
         </form>

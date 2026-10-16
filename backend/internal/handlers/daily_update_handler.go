@@ -30,7 +30,17 @@ func (h *DailyUpdateHandler) GetDailyUpdate(c *gin.Context) {
 
 	user := middleware.GetUser(c)
 
-	update, err := h.service.GetDailyUpdate(c.Request.Context(), user.IRID, query.Date)
+	targetIRID := query.TargetIRID
+	if targetIRID == "" {
+		targetIRID = user.IRID
+	}
+
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, targetIRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	update, err := h.service.GetDailyUpdate(c.Request.Context(), targetIRID, query.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -48,8 +58,18 @@ func (h *DailyUpdateHandler) SaveDailyUpdate(c *gin.Context) {
 
 	user := middleware.GetUser(c)
 
+	targetIRID := req.TargetIRID
+	if targetIRID == "" {
+		targetIRID = user.IRID
+	}
+
+	if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, targetIRID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	// Verify authorization for all activities being created/updated/deleted
-	if !h.verifyDailyUpdateAuthorization(c, user, &req) {
+	if !h.verifyDailyUpdateAuthorization(c, user, &req, targetIRID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -67,13 +87,13 @@ func (h *DailyUpdateHandler) SaveDailyUpdate(c *gin.Context) {
 	c.JSON(http.StatusOK, update)
 }
 
-func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, user *models.User, req *models.DailyUpdateRequest) bool {
+func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, user *models.User, req *models.DailyUpdateRequest, targetIRID string) bool {
 	requestContext := ctx.Request.Context()
 
 	// Check Infos
 	if req.Infos != nil {
 		for _, activity := range req.Infos {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "info") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "info", targetIRID) {
 				return false
 			}
 		}
@@ -82,7 +102,7 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	// Check Invites
 	if req.Invites != nil {
 		for _, activity := range req.Invites {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "invite") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "invite", targetIRID) {
 				return false
 			}
 		}
@@ -91,7 +111,7 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	// Check Plans
 	if req.Plans != nil {
 		for _, activity := range req.Plans {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "plan") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "plan", targetIRID) {
 				return false
 			}
 		}
@@ -100,7 +120,7 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	// Check Closings
 	if req.Closings != nil {
 		for _, activity := range req.Closings {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "closing") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "closing", targetIRID) {
 				return false
 			}
 		}
@@ -109,7 +129,7 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	// Check FG Invites
 	if req.FGInvites != nil {
 		for _, activity := range req.FGInvites {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "fg_invite") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "fg_invite", targetIRID) {
 				return false
 			}
 		}
@@ -118,7 +138,7 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	// Check Feel Goods
 	if req.FeelGoods != nil {
 		for _, activity := range req.FeelGoods {
-			if !h.verifyActivityAuthorization(requestContext, user, activity, "feel_good") {
+			if !h.verifyActivityAuthorization(requestContext, user, activity, "feel_good", targetIRID) {
 				return false
 			}
 		}
@@ -127,13 +147,13 @@ func (h *DailyUpdateHandler) verifyDailyUpdateAuthorization(ctx *gin.Context, us
 	return true
 }
 
-func (h *DailyUpdateHandler) verifyActivityAuthorization(ctx context.Context, user *models.User, activity models.DailyUpdateActivityRequest, activityType string) bool {
+func (h *DailyUpdateHandler) verifyActivityAuthorization(ctx context.Context, user *models.User, activity models.DailyUpdateActivityRequest, activityType string, targetIRID string) bool {
 	var irID string
 	var err error
 
 	switch activity.Action {
 	case "create":
-		irID = user.IRID
+		irID = targetIRID
 	case "update", "delete":
 		if activity.ID == "" {
 			return false
@@ -155,6 +175,10 @@ func (h *DailyUpdateHandler) verifyActivityAuthorization(ctx context.Context, us
 			return false
 		}
 		if err != nil {
+			return false
+		}
+		// Require that the activity belongs to targetIRID for update/delete
+		if irID != targetIRID {
 			return false
 		}
 	default:

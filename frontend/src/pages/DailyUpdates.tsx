@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import api from '../services/api'
 import { getErrorMessage } from '../services/errors'
-import type { Info, Invite, Plan, Closing, FGInvite, FeelGood } from '../types/auth'
+import type { Info, Invite, Plan, Closing, FGInvite, FeelGood, User } from '../types/auth'
 import { Plus, Save, Loader2, AlertCircle, ChevronDown, Edit2, Trash2, Check, X } from 'lucide-react'
 
 interface DailyUpdateResponse {
@@ -26,12 +26,20 @@ interface ActivityUpdate {
 
 interface DailyUpdateRequest {
   date: string
+  target_ir_id?: string
   infos: ActivityUpdate[]
   invites: ActivityUpdate[]
   plans: ActivityUpdate[]
   closings: ActivityUpdate[]
   fg_invites: ActivityUpdate[]
   feel_goods: ActivityUpdate[]
+}
+
+interface UserListResponse {
+  data: User[]
+  total: number
+  page: number
+  limit: number
 }
 
 const toApiTime = (time: string) => {
@@ -48,17 +56,36 @@ export const DailyUpdates = () => {
   const { user: currentUser } = useAuth()
   const queryClient = useQueryClient()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedOwnerIrId, setSelectedOwnerIrId] = useState<string>('')
+  const [ownerSearchInput, setOwnerSearchInput] = useState('')
+  const [showOwnerDropdown, setShowOwnerDropdown] = useState(false)
   const [changes, setChanges] = useState<Map<string, ActivityUpdate>>(new Map())
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['infos', 'invites', 'plans', 'closings', 'fg_invites', 'feel_goods']))
   const [saveError, setSaveError] = useState<string | null>(null)
+  const ownerDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ownerDropdownRef.current && !ownerDropdownRef.current.contains(event.target as Node)) {
+        setShowOwnerDropdown(false)
+      }
+    }
+
+    if (showOwnerDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showOwnerDropdown])
+
+  const targetIRID = selectedOwnerIrId || currentUser?.ir_id || ''
 
   const { data: dailyUpdate, isLoading, error } = useQuery({
-    queryKey: ['daily-updates', selectedDate],
+    queryKey: ['daily-updates', selectedDate, targetIRID],
     queryFn: async () => {
       const res = await api.get<DailyUpdateResponse>('/daily-updates', {
-        params: { date: selectedDate },
+        params: { date: selectedDate, target_ir_id: targetIRID },
       })
       return res.data
     },
@@ -104,11 +131,68 @@ export const DailyUpdates = () => {
     },
   })
 
-  const allInfos = allInfosRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
-  const allInvites = allInvitesRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
-  const allPlans = allPlansRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
-  const allClosings = allClosingsRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
-  const allFGInvites = allFGInvitesRaw?.filter((i: any) => i.ir_id === currentUser?.ir_id) || []
+  const { data: allUsers } = useQuery({
+    queryKey: ['users-for-owner-selector'],
+    queryFn: async () => {
+      const res = await api.get<UserListResponse>('/users', {
+        params: { limit: 1000 },
+      })
+      return res.data.data
+    },
+  })
+
+  const downlines = useMemo(() => {
+    if (!currentUser || !allUsers) return new Set<string>()
+    const result = new Set<string>()
+    const getDownlineIds = (userId: string) => {
+      const directDownlines = allUsers.filter((u) => u.upline_id === userId)
+      directDownlines.forEach((u) => {
+        result.add(u.id)
+        getDownlineIds(u.id)
+      })
+    }
+    getDownlineIds(currentUser.id)
+    return result
+  }, [currentUser, allUsers])
+
+  const getOwnersForActivitySelector = useMemo(() => {
+    if (!allUsers || !currentUser) return []
+    if (currentUser.role === 'admin') return allUsers
+    return allUsers.filter((u) => u.id === currentUser.id || downlines.has(u.id))
+  }, [allUsers, currentUser, downlines])
+
+  const filteredOwners = useMemo(() => {
+    if (!ownerSearchInput) return getOwnersForActivitySelector
+    return getOwnersForActivitySelector.filter(
+      (u) => u.name.toLowerCase().includes(ownerSearchInput.toLowerCase()) || u.ir_id.includes(ownerSearchInput)
+    )
+  }, [getOwnersForActivitySelector, ownerSearchInput])
+
+  const selectedOwner = useMemo(() => {
+    if (!selectedOwnerIrId) return null
+    return getOwnersForActivitySelector.find((u) => u.ir_id === selectedOwnerIrId)
+  }, [selectedOwnerIrId, getOwnersForActivitySelector])
+
+  const handleOwnerSelect = (irId: string) => {
+    if (changes.size > 0 || deletedIds.size > 0) {
+      const confirmDiscard = window.confirm('You have unsaved changes. Are you sure you want to discard them?')
+      if (!confirmDiscard) {
+        return
+      }
+    }
+    setSelectedOwnerIrId(irId)
+    setShowOwnerDropdown(false)
+    setOwnerSearchInput('')
+    setChanges(new Map())
+    setDeletedIds(new Set())
+    setEditingId(null)
+  }
+
+  const allInfos = allInfosRaw?.filter((i: any) => i.ir_id === targetIRID) || []
+  const allInvites = allInvitesRaw?.filter((i: any) => i.ir_id === targetIRID) || []
+  const allPlans = allPlansRaw?.filter((i: any) => i.ir_id === targetIRID) || []
+  const allClosings = allClosingsRaw?.filter((i: any) => i.ir_id === targetIRID) || []
+  const allFGInvites = allFGInvitesRaw?.filter((i: any) => i.ir_id === targetIRID) || []
 
   // Activity progression: filter to show only prospects eligible for the next step
   const inviteInfoIds = new Set<string>(allInvites.map((inv: any) => inv.info_id))
@@ -126,6 +210,7 @@ export const DailyUpdates = () => {
     mutationFn: async () => {
       const request: DailyUpdateRequest = {
         date: selectedDate,
+        target_ir_id: targetIRID,
         infos: [],
         invites: [],
         plans: [],
@@ -145,7 +230,7 @@ export const DailyUpdates = () => {
       return res.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate] })
+      queryClient.invalidateQueries({ queryKey: ['daily-updates', selectedDate, targetIRID] })
       setChanges(new Map())
       setDeletedIds(new Set())
       setEditingId(null)
@@ -327,14 +412,60 @@ export const DailyUpdates = () => {
       <div className="max-w-7xl">
         <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Daily Updates</h1>
 
-        <div className="mb-6 flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date:</label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
+        <div className="mb-6 card">
+          <div className="card-content space-y-4">
+            <div>
+              <label className="label text-sm">Activity Owner</label>
+              <div className="relative" ref={ownerDropdownRef}>
+                <button
+                  onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-left flex items-center justify-between bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <span className="text-slate-900 dark:text-white">
+                    {selectedOwner ? `${selectedOwner.name} (${selectedOwner.ir_id})` : currentUser ? `${currentUser.name} (${currentUser.ir_id}) (Me)` : 'Select owner'}
+                  </span>
+                  <ChevronDown size={18} className="text-slate-400" />
+                </button>
+
+                {showOwnerDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 p-2 border-b border-slate-200 dark:border-slate-700">
+                      <input
+                        type="text"
+                        placeholder="Search by name or IR ID..."
+                        value={ownerSearchInput}
+                        onChange={(e) => setOwnerSearchInput(e.target.value)}
+                        className="input text-sm py-1"
+                      />
+                    </div>
+                    {filteredOwners.map((owner) => (
+                      <button
+                        key={owner.ir_id}
+                        onClick={() => handleOwnerSelect(owner.ir_id)}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800 border-t border-slate-100 ${selectedOwnerIrId === owner.ir_id ? 'bg-blue-50 text-blue-600 font-medium dark:bg-slate-800 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}
+                      >
+                        <div className="font-medium">{owner.name}{owner.id === currentUser?.id ? ' (Me)' : ''}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-500">{owner.ir_id}</div>
+                      </button>
+                    ))}
+                    {filteredOwners.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-500 text-center">No owners found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <label className="label text-sm">Date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </div>
         </div>
 
         {error && (

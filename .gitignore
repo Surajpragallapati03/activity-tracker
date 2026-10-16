@@ -11,6 +11,7 @@ frontend/dist/
 backend/.env
 backend/.local.env
 backend/server
+backend/bin/
 
 # OS
 .DS_Store

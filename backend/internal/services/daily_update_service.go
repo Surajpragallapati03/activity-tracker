@@ -103,6 +103,11 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 		return nil, fmt.Errorf("invalid date format, use YYYY-MM-DD")
 	}
 
+	targetIRID := req.TargetIRID
+	if targetIRID == "" {
+		targetIRID = currentUser.IRID
+	}
+
 	// Start transaction
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
@@ -113,7 +118,7 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 	// Process all activities
 	if req.Infos != nil {
 		for _, activity := range req.Infos {
-			err := s.processInfo(ctx, tx, activity, currentUser, activityDate)
+			err := s.processInfo(ctx, tx, activity, currentUser, activityDate, targetIRID)
 			if err != nil {
 				return nil, err
 			}
@@ -122,7 +127,7 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 
 	if req.Invites != nil {
 		for _, activity := range req.Invites {
-			err := s.processInvite(ctx, tx, activity, req.Date, currentUser)
+			err := s.processInvite(ctx, tx, activity, req.Date, currentUser, targetIRID)
 			if err != nil {
 				return nil, err
 			}
@@ -131,7 +136,7 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 
 	if req.Plans != nil {
 		for _, activity := range req.Plans {
-			err := s.processPlan(ctx, tx, activity, currentUser, activityDate)
+			err := s.processPlan(ctx, tx, activity, currentUser, activityDate, targetIRID)
 			if err != nil {
 				return nil, err
 			}
@@ -172,13 +177,13 @@ func (s *DailyUpdateService) SaveDailyUpdate(ctx context.Context, req *models.Da
 	}
 
 	// Fetch and return updated data
-	return s.GetDailyUpdate(ctx, currentUser.IRID, req.Date)
+	return s.GetDailyUpdate(ctx, targetIRID, req.Date)
 }
 
-func (s *DailyUpdateService) processInfo(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time) error {
+func (s *DailyUpdateService) processInfo(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time, targetIRID string) error {
 	switch activity.Action {
 	case "create":
-		return s.createInfoInTx(ctx, tx, activity, currentUser, activityDate)
+		return s.createInfoInTx(ctx, tx, activity, currentUser, activityDate, targetIRID)
 	case "update":
 		return s.updateInfoInTx(ctx, tx, activity)
 	case "delete":
@@ -188,7 +193,7 @@ func (s *DailyUpdateService) processInfo(ctx context.Context, tx pgx.Tx, activit
 	}
 }
 
-func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time) error {
+func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time, targetIRID string) error {
 	data := activity.Data
 
 	prospectName, ok := data["prospect_name"].(string)
@@ -206,7 +211,7 @@ func (s *DailyUpdateService) createInfoInTx(ctx context.Context, tx pgx.Tx, acti
 	query := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`
 
-	_, err := tx.Exec(ctx, query, id, currentUser.IRID, prospectName, phone, response, status, remarks, currentUser.ID, activityDate)
+	_, err := tx.Exec(ctx, query, id, targetIRID, prospectName, phone, response, status, remarks, currentUser.ID, activityDate)
 	return err
 }
 
@@ -288,10 +293,10 @@ func (s *DailyUpdateService) deleteInfoInTx(ctx context.Context, tx pgx.Tx, acti
 	return err
 }
 
-func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User) error {
+func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User, targetIRID string) error {
 	switch activity.Action {
 	case "create":
-		return s.createInviteInTx(ctx, tx, activity, dailyUpdateDate, currentUser)
+		return s.createInviteInTx(ctx, tx, activity, dailyUpdateDate, currentUser, targetIRID)
 	case "update":
 		return s.updateInviteInTx(ctx, tx, activity)
 	case "delete":
@@ -301,7 +306,7 @@ func (s *DailyUpdateService) processInvite(ctx context.Context, tx pgx.Tx, activ
 	}
 }
 
-func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User) error {
+func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, dailyUpdateDate string, currentUser *models.User, targetIRID string) error {
 	data := activity.Data
 
 	status := extractOptionalString(data, "status")
@@ -324,7 +329,7 @@ func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, ac
 		phone := extractOptionalString(data, "phone")
 
 		infoUUID = uuid.New()
-		irID = currentUser.IRID
+		irID = targetIRID
 
 		infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
 		              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
@@ -350,6 +355,11 @@ func (s *DailyUpdateService) createInviteInTx(ctx context.Context, tx pgx.Tx, ac
 		err = tx.QueryRow(ctx, "SELECT ir_id FROM infos WHERE id = $1", infoUUID).Scan(&irID)
 		if err != nil {
 			return fmt.Errorf("cannot get ir_id from info: %w", err)
+		}
+
+		// Validate that the info belongs to targetIRID
+		if irID != targetIRID {
+			return fmt.Errorf("info does not belong to target IR")
 		}
 	}
 
@@ -474,10 +484,10 @@ func (s *DailyUpdateService) deleteInviteInTx(ctx context.Context, tx pgx.Tx, ac
 	return err
 }
 
-func (s *DailyUpdateService) processPlan(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time) error {
+func (s *DailyUpdateService) processPlan(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time, targetIRID string) error {
 	switch activity.Action {
 	case "create":
-		return s.createPlanInTx(ctx, tx, activity, currentUser, activityDate)
+		return s.createPlanInTx(ctx, tx, activity, currentUser, activityDate, targetIRID)
 	case "update":
 		return s.updatePlanInTx(ctx, tx, activity)
 	case "delete":
@@ -487,7 +497,7 @@ func (s *DailyUpdateService) processPlan(ctx context.Context, tx pgx.Tx, activit
 	}
 }
 
-func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time) error {
+func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, activity models.DailyUpdateActivityRequest, currentUser *models.User, activityDate time.Time, targetIRID string) error {
 	data := activity.Data
 
 	isDKD := false
@@ -543,7 +553,7 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 
 		// Create Info with response="A"
 		infoID := uuid.New()
-		irID = currentUser.IRID
+		irID = targetIRID
 		infoQuery := `INSERT INTO infos (id, ir_id, prospect_name, phone, response, status, remarks, created_by, created_at, updated_at)
 		              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())`
 
@@ -582,6 +592,11 @@ func (s *DailyUpdateService) createPlanInTx(ctx context.Context, tx pgx.Tx, acti
 		err = tx.QueryRow(ctx, "SELECT ir_id FROM invites WHERE id = $1", inviteUUID).Scan(&irID)
 		if err != nil {
 			return fmt.Errorf("cannot get ir_id from invite: %w", err)
+		}
+
+		// Validate that the invite belongs to targetIRID
+		if irID != targetIRID {
+			return fmt.Errorf("invite does not belong to target IR")
 		}
 	}
 
