@@ -136,6 +136,18 @@ func (h *PlanHandler) UpdatePlan(c *gin.Context) {
 		return
 	}
 
+	// If ir_id is being changed, only admin can do it and must have access to the new IR
+	if req.IRID != nil && *req.IRID != "" && *req.IRID != plan.IRID {
+		if user.Role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, *req.IRID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+	}
+
 	plan, err = h.service.UpdatePlan(c.Request.Context(), id, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "plan not found") {

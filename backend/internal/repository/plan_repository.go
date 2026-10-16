@@ -77,18 +77,25 @@ func (r *PlanRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Pla
 func (r *PlanRepository) Update(ctx context.Context, id uuid.UUID, updates *models.UpdatePlanRequest) error {
 	query := `
 		UPDATE plans
-		SET ul1 = COALESCE($1, ul1),
-		    ul2 = COALESCE($2, ul2),
-		    quoted_amount = COALESCE($3, quoted_amount),
-		    expected_uvs = COALESCE($4, expected_uvs),
-		    status = COALESCE($5, status),
-		    remarks = COALESCE($6, remarks),
-		    pipeline_status = COALESCE($7, pipeline_status),
+		SET ir_id = COALESCE(NULLIF($1, ''), ir_id),
+		    ul1 = COALESCE($2, ul1),
+		    ul2 = COALESCE($3, ul2),
+		    quoted_amount = COALESCE($4, quoted_amount),
+		    expected_uvs = COALESCE($5, expected_uvs),
+		    status = COALESCE($6, status),
+		    remarks = COALESCE($7, remarks),
+		    pipeline_status = COALESCE($8, pipeline_status),
 		    updated_at = now()
-		WHERE id = $8
+		WHERE id = $9
 	`
 
+	irid := ""
+	if updates.IRID != nil {
+		irid = *updates.IRID
+	}
+
 	cmdTag, err := r.db.Exec(ctx, query,
+		irid,
 		updates.UL1,
 		updates.UL2,
 		updates.QuotedAmount,

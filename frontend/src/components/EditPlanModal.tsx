@@ -29,7 +29,7 @@ export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const submitData = {
+    const submitData: any = {
       ul1: form.ul1,
       ul2: form.ul2,
       quoted_amount: form.quoted_amount || undefined,
@@ -37,6 +37,9 @@ export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onS
       status: form.status,
       remarks: form.remarks || undefined,
       pipeline_status: form.pipeline_status,
+    }
+    if (isAdmin && form.ir_id && form.ir_id !== plan.ir_id) {
+      submitData.ir_id = form.ir_id
     }
     onSubmit(submitData)
   }
