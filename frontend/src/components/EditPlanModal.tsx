@@ -13,9 +13,8 @@ export interface EditPlanModalProps {
   currentUser: User | null
 }
 
-export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onSubmit, isLoading, error, users, currentUser }: EditPlanModalProps) => {
+export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onSubmit, isLoading, error, users: _users, currentUser: _currentUser }: EditPlanModalProps) => {
   const [form, setForm] = useState({
-    ir_id: plan.ir_id,
     ul1: plan.ul1,
     ul2: plan.ul2,
     quoted_amount: plan.quoted_amount || '',
@@ -25,11 +24,9 @@ export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onS
     pipeline_status: plan.pipeline_status || 'tentative',
   })
 
-  const isAdmin = currentUser?.role === 'admin'
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const submitData: any = {
+    const submitData = {
       ul1: form.ul1,
       ul2: form.ul2,
       quoted_amount: form.quoted_amount || undefined,
@@ -37,9 +34,6 @@ export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onS
       status: form.status,
       remarks: form.remarks || undefined,
       pipeline_status: form.pipeline_status,
-    }
-    if (isAdmin && form.ir_id && form.ir_id !== plan.ir_id) {
-      submitData.ir_id = form.ir_id
     }
     onSubmit(submitData)
   }
@@ -124,23 +118,6 @@ export const EditPlanModal = ({ plan, invite: _invite, info: _info, onClose, onS
                 rows={3}
               />
             </div>
-            {isAdmin && (
-              <div>
-                <label className="label">IR ID</label>
-                <select
-                  value={form.ir_id}
-                  onChange={(e) => setForm({ ...form, ir_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Select IR</option>
-                  {users?.map((u) => (
-                    <option key={u.id} value={u.ir_id}>
-                      {u.name} ({u.ir_id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
           <div className="card-footer flex gap-3 justify-end">
             <button type="button" onClick={onClose} className="btn-secondary">

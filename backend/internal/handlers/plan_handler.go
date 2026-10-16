@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -130,22 +131,28 @@ func (h *PlanHandler) UpdatePlan(c *gin.Context) {
 		return
 	}
 
-	var req models.UpdatePlanRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var rawReq map[string]interface{}
+	if err := c.ShouldBindJSON(&rawReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// If ir_id is being changed, only admin can do it and must have access to the new IR
-	if req.IRID != nil && *req.IRID != "" && *req.IRID != plan.IRID {
-		if user.Role != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-			return
-		}
-		if !h.authz.CanAccessActivityForIR(c.Request.Context(), user, *req.IRID) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-			return
-		}
+	// Plan owner (ir_id) cannot be changed after creation
+	if _, hasIRID := rawReq["ir_id"]; hasIRID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "plan owner cannot be changed"})
+		return
+	}
+
+	// Convert to UpdatePlanRequest
+	var req models.UpdatePlanRequest
+	reqBytes, err := json.Marshal(rawReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := json.Unmarshal(reqBytes, &req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	plan, err = h.service.UpdatePlan(c.Request.Context(), id, &req)

@@ -34,7 +34,6 @@ type CreatePlanRequest struct {
 }
 
 type UpdatePlanRequest struct {
-	IRID           *string `json:"ir_id"`
 	UL1            *string `json:"ul1"`
 	UL2            *string `json:"ul2"`
 	QuotedAmount   *string `json:"quoted_amount"`
