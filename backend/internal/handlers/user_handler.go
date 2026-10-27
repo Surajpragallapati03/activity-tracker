@@ -189,6 +189,8 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		return
 	}
 
+	query.Search = strings.TrimSpace(query.Search)
+
 	if query.Page == 0 {
 		query.Page = 1
 	}

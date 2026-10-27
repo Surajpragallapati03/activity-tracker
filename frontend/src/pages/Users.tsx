@@ -88,7 +88,8 @@ export const Users = () => {
     if (!currentUser) return false
     if (currentUser.role === 'admin') return true
     if (currentUser.id === u.id) return true
-    return downlines.has(u.id)
+    // Backend filters results to show only accessible users (self + downlines for non-admin)
+    return true
   }
   const canDeleteUser = (u: User) => {
     if (!currentUser) return false
@@ -97,28 +98,10 @@ export const Users = () => {
     return true
   }
 
-  const downlines = useMemo(() => {
-    if (!data || !currentUser) return new Set()
-    const result = new Set<string>()
-    const buildMap = (userId: string) => {
-      data.data.forEach((u: User) => {
-        if (u.upline_id === userId) {
-          result.add(u.id)
-          buildMap(u.id)
-        }
-      })
-    }
-    buildMap(currentUser.id)
-    return result
-  }, [data, currentUser])
-
-  const isDownline = (u: User) => downlines.has(u.id)
-
   const visibleUsers = useMemo(() => {
-    if (!data || !currentUser) return data?.data || []
-    if (currentUser.role === 'admin') return data.data
-    return data.data.filter((u) => u.id === currentUser.id || isDownline(u))
-  }, [data, currentUser])
+    if (!data) return []
+    return data.data
+  }, [data])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
