@@ -203,8 +203,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	// Admin can see all users, non-admin can only see themselves and downlines
 	if currentUser.Role != "admin" {
-		// For non-admin, filter to show only accessible users
-		// For now, we'll get all and filter in memory (max 50 users)
+		// For non-admin, fetch all users to build hierarchy
 		resp, err := h.service.ListUsers(c.Request.Context(), &models.ListUsersQuery{Page: 1, Limit: 1000})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -222,20 +221,35 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 			}
 		}
 
-		// Recalculate total after filtering
-		total := int64(len(filtered))
+		// Apply search filter to accessible users
+		var searchFiltered []models.User
+		if query.Search != "" {
+			searchLower := strings.ToLower(query.Search)
+			for _, user := range filtered {
+				if strings.Contains(strings.ToLower(user.Name), searchLower) ||
+					strings.Contains(strings.ToLower(user.Email), searchLower) ||
+					strings.Contains(strings.ToLower(user.IRID), searchLower) {
+					searchFiltered = append(searchFiltered, user)
+				}
+			}
+		} else {
+			searchFiltered = filtered
+		}
+
+		// Paginate the search-filtered results
+		total := int64(len(searchFiltered))
 		offset := (query.Page - 1) * query.Limit
 		end := offset + query.Limit
-		if offset >= len(filtered) {
-			filtered = []models.User{}
-		} else if end >= len(filtered) {
-			filtered = filtered[offset:]
+		if offset >= len(searchFiltered) {
+			searchFiltered = []models.User{}
+		} else if end >= len(searchFiltered) {
+			searchFiltered = searchFiltered[offset:]
 		} else {
-			filtered = filtered[offset:end]
+			searchFiltered = searchFiltered[offset:end]
 		}
 
 		c.JSON(http.StatusOK, models.ListUsersResponse{
-			Data:  filtered,
+			Data:  searchFiltered,
 			Total: total,
 			Page:  query.Page,
 			Limit: query.Limit,
