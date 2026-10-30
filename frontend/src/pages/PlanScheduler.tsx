@@ -169,30 +169,32 @@ export const PlanScheduler = () => {
 
   return (
     <DashboardLayout>
-      {/* Viewport-bounded shell: header (4rem) + main padding (p-4/sm:p-6/lg:p-8) */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-[32rem] h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-8rem)]">
+      {/* Viewport-bounded shell: header (4rem) + main padding (p-4/sm:p-6/lg:p-8).
+          No min-height floor, so the page never outgrows the viewport on short screens. */}
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-8rem)]">
         {/* Telegram Preview - top on mobile, right column on desktop */}
-        <div className="order-1 lg:order-2 basis-[42%] lg:basis-1/3 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
-          <h2 className="shrink-0 text-lg font-semibold text-slate-900 dark:text-white mb-3 sm:mb-4">Telegram Preview</h2>
+        <div className="order-1 lg:order-2 basis-[42%] lg:basis-1/3 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 sm:p-4 lg:p-6">
+          <h2 className="shrink-0 text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-2 lg:mb-4">Telegram Preview</h2>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-700 rounded-lg p-4 mb-4 whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-700 rounded-lg p-3 sm:p-4 mb-3 lg:mb-4 whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
             {telegramMessage || 'No scheduled invites'}
           </div>
 
-          <div className="shrink-0 space-y-2">
+          {/* Side-by-side on mobile to reclaim vertical space; stacked on desktop */}
+          <div className="shrink-0 grid grid-cols-2 lg:grid-cols-1 gap-2">
             <button
               onClick={handleCopyMessage}
               disabled={telegramMessage === 'No scheduled invites'}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Copy size={16} /> Copy Message
+              <Copy size={16} className="shrink-0" /> <span className="truncate">Copy Message</span>
             </button>
             <button
               onClick={handleShareToTelegram}
               disabled={telegramMessage === 'No scheduled invites'}
-              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Share2 size={16} /> Share to Telegram
+              <Share2 size={16} className="shrink-0" /> <span className="truncate">Share to Telegram</span>
             </button>
           </div>
         </div>
