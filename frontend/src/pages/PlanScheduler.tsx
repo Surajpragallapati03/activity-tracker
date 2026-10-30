@@ -169,14 +169,43 @@ export const PlanScheduler = () => {
 
   return (
     <DashboardLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Scheduler Section */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Viewport-bounded shell: header (4rem) + main padding (p-4/sm:p-6/lg:p-8).
+          No min-height floor, so the page never outgrows the viewport on short screens. */}
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-8rem)]">
+        {/* Telegram Preview - top on mobile, right column on desktop */}
+        <div className="order-1 lg:order-2 basis-[42%] lg:basis-1/3 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 sm:p-4 lg:p-6">
+          <h2 className="shrink-0 text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-2 lg:mb-4">Telegram Preview</h2>
+
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-700 rounded-lg p-3 sm:p-4 mb-3 lg:mb-4 whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
+            {telegramMessage || 'No scheduled invites'}
+          </div>
+
+          {/* Side-by-side on mobile to reclaim vertical space; stacked on desktop */}
+          <div className="shrink-0 grid grid-cols-2 lg:grid-cols-1 gap-2">
+            <button
+              onClick={handleCopyMessage}
+              disabled={telegramMessage === 'No scheduled invites'}
+              className="w-full px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <Copy size={16} className="shrink-0" /> <span className="truncate">Copy Message</span>
+            </button>
+            <button
+              onClick={handleShareToTelegram}
+              disabled={telegramMessage === 'No scheduled invites'}
+              className="w-full px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <Share2 size={16} className="shrink-0" /> <span className="truncate">Share to Telegram</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Scheduler controls + invite list - below preview on mobile, left column on desktop */}
+        <div className="order-2 lg:order-1 basis-[58%] lg:basis-2/3 min-h-0 min-w-0 overflow-y-auto overscroll-contain pr-1 space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-6">Plan Scheduler</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6">Plan Scheduler</h1>
 
             {/* Date Filter */}
-            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-4 sm:mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -217,7 +246,7 @@ export const PlanScheduler = () => {
             </div>
 
             {/* UL2 Management */}
-            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-4 sm:mb-6">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">UL2 Configuration</h2>
 
               <div className="space-y-3 mb-4">
@@ -290,7 +319,7 @@ export const PlanScheduler = () => {
             {/* Invites List */}
             <div className="space-y-4">
               {groupedByDate.length === 0 ? (
-                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 text-center">
+                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 sm:p-6 text-center">
                   <p className="text-slate-600 dark:text-slate-400">
                     {isLoading ? 'Loading invites...' : 'No invites scheduled for this date range'}
                   </p>
@@ -301,7 +330,7 @@ export const PlanScheduler = () => {
                     key={dateKey}
                     className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
                   >
-                    <div className="bg-slate-50 dark:bg-slate-700 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                    <div className="bg-slate-50 dark:bg-slate-700 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-600">
                       <h3 className="font-semibold text-slate-900 dark:text-white">{formatDisplayDate(dateKey)}</h3>
                     </div>
 
@@ -312,7 +341,7 @@ export const PlanScheduler = () => {
                         const virtualEmoji = si.invite.mode === 'virtual' ? ' 👨‍💻' : ''
 
                         return (
-                          <div key={si.invite.id} className="p-6">
+                          <div key={si.invite.id} className="p-4 sm:p-6">
                             <div className="mb-3">
                               <p className="text-sm font-medium text-slate-900 dark:text-white">
                                 {si.irName} → {si.prospectName}
@@ -331,12 +360,12 @@ export const PlanScheduler = () => {
                                 </div>
                               ) : (
                                 displayUL2s.map((ul2) => (
-                                  <label key={ul2} className="flex items-center gap-2 cursor-pointer">
+                                  <label key={ul2} className="flex items-center gap-2 cursor-pointer py-1">
                                     <input
                                       type="checkbox"
                                       checked={selectedUL2s.includes(ul2)}
                                       onChange={() => handleToggleUL2(si.invite.id, ul2)}
-                                      className="w-4 h-4 rounded border-slate-300"
+                                      className="w-5 h-5 sm:w-4 sm:h-4 rounded border-slate-300 shrink-0"
                                     />
                                     <span className="text-slate-700 dark:text-slate-300 text-sm">{ul2}</span>
                                   </label>
@@ -356,34 +385,6 @@ export const PlanScheduler = () => {
                   </div>
                 ))
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Telegram Preview - Sticky on Desktop */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-20 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Telegram Preview</h2>
-
-            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 mb-4 max-h-96 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
-              {telegramMessage || 'No scheduled invites'}
-            </div>
-
-            <div className="space-y-2">
-              <button
-                onClick={handleCopyMessage}
-                disabled={telegramMessage === 'No scheduled invites'}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Copy size={16} /> Copy Message
-              </button>
-              <button
-                onClick={handleShareToTelegram}
-                disabled={telegramMessage === 'No scheduled invites'}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Share2 size={16} /> Share to Telegram
-              </button>
             </div>
           </div>
         </div>
