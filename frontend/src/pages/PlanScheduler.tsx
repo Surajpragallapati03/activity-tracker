@@ -27,6 +27,28 @@ const formatDisplayDate = (dateStr: string): string => {
   return `${day}, ${dom} ${month}`
 }
 
+const renderTelegramPreview = (message: string) => {
+  return message.split('\n').map((line, lineIdx) => {
+    if (line === '') {
+      return <div key={lineIdx}>&nbsp;</div>
+    }
+
+    const segments = line.split(/(\*\*[^*]+\*\*)/g).filter((segment) => segment !== '')
+
+    return (
+      <div key={lineIdx}>
+        {segments.map((segment, segIdx) =>
+          segment.startsWith('**') && segment.endsWith('**') ? (
+            <strong key={segIdx}>{segment.slice(2, -2)}</strong>
+          ) : (
+            <span key={segIdx}>{segment}</span>
+          )
+        )}
+      </div>
+    )
+  })
+}
+
 export const PlanScheduler = () => {
   const { user } = useAuth()
   const [fromDate, setFromDate] = useState(getTodayString())
@@ -176,8 +198,8 @@ export const PlanScheduler = () => {
         <div className="order-1 lg:order-2 basis-[42%] lg:basis-1/3 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 sm:p-4 lg:p-6">
           <h2 className="shrink-0 text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-2 lg:mb-4">Telegram Preview</h2>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-700 rounded-lg p-3 sm:p-4 mb-3 lg:mb-4 whitespace-pre-wrap break-words font-mono text-sm text-slate-900 dark:text-white">
-            {telegramMessage || 'No scheduled invites'}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-700 rounded-lg p-3 sm:p-4 mb-3 lg:mb-4 break-words font-mono text-sm text-slate-900 dark:text-white">
+            {telegramMessage ? renderTelegramPreview(telegramMessage) : 'No scheduled invites'}
           </div>
 
           {/* Side-by-side on mobile to reclaim vertical space; stacked on desktop */}

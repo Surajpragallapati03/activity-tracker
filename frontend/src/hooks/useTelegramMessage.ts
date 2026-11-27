@@ -82,7 +82,7 @@ export const useTelegramMessage = (
 
     sortedDates.forEach((date) => {
       lines.push('')
-      lines.push(date)
+      lines.push(`**#${date}**`)
 
       const ul2Map = dateGroups.get(date)!
       const sortedUL2s = Array.from(ul2Map.keys()).sort()
@@ -99,7 +99,7 @@ export const useTelegramMessage = (
         const sortedEntries = [...withTime, ...withoutTime]
 
         lines.push('')
-        lines.push(ul2Group)
+        lines.push(`**${ul2Group}**`)
 
         sortedEntries.forEach((entry) => {
           lines.push(entry.entry)
