@@ -30,6 +30,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       lines.push(`𝐒𝐔𝐑𝐄𝐒𝐇𝐎𝐓 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
       pipelineData.sureshot.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
+        lines.push('')
       })
     }
 
@@ -39,6 +40,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       lines.push(`𝐒𝐓𝐑𝐎𝐍𝐆 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
       pipelineData.strong.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
+        lines.push('')
       })
     }
 
@@ -48,6 +50,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       lines.push(`𝐓𝐄𝐍𝐓𝐀𝐓𝐈𝐕𝐄 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
       pipelineData.tentative.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
+        lines.push('')
       })
     }
 
