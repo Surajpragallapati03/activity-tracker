@@ -28,6 +28,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       const totalUV = pipelineData.sureshot.reduce((sum, d) => sum + d.expected_uvs, 0)
       lines.push('')
       lines.push(`𝐒𝐔𝐑𝐄𝐒𝐇𝐎𝐓 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
+      lines.push('')
       pipelineData.sureshot.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
         lines.push('')
@@ -38,6 +39,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       const totalUV = pipelineData.strong.reduce((sum, d) => sum + d.expected_uvs, 0)
       lines.push('')
       lines.push(`𝐒𝐓𝐑𝐎𝐍𝐆 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
+      lines.push('')
       pipelineData.strong.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
         lines.push('')
@@ -48,6 +50,7 @@ export const useTelegramPipelineMessage = (pipelineData: PipelineData | null): s
       const totalUV = pipelineData.tentative.reduce((sum, d) => sum + d.expected_uvs, 0)
       lines.push('')
       lines.push(`𝐓𝐄𝐍𝐓𝐀𝐓𝐈𝐕𝐄 → ${totalUV.toFixed(2)} 𝐔𝐕𝐬`)
+      lines.push('')
       pipelineData.tentative.forEach((detail, idx) => {
         lines.push(`${idx + 1}. ${detail.ir_name} → ${detail.prospect_name} → ${detail.expected_uvs} UVs${detail.remarks ? ' → ' + detail.remarks : ''}`)
         lines.push('')
